@@ -44,7 +44,7 @@ This commit graph is what you'd get if you ran these commands:
  \   \   |   /   /
 - THE COOL THING: -  merge-bar was a fast-forward from master! Even when
  /   /   |   \   \   you do merge --no-ff, master is exactly the right
-                     merge-base.
+                     merge base.
 
 
 DESCRIPTIONS
