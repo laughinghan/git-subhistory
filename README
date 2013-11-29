@@ -29,7 +29,7 @@ This commit graph is what you'd get if you ran these commands:
 (Note 2 disconnected lineages of commits.)
 
 0. git init
-   mkdir sub
+   mkdir -p path/to/sub/
 1. echo foo > path/to/sub/foo
    git add path/to/sub/foo
    git commit -m 'Add path/to/sub/foo'
