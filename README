@@ -28,18 +28,23 @@ This commit graph is what you'd get if you ran these commands:
 
 (Note 2 disconnected lineages of commits.)
 
-0. git init
-   mkdir -p path/to/sub/
-1. echo foo > path/to/sub/foo
-   git add path/to/sub/foo
-   git commit -m 'Add path/to/sub/foo'
-2. git-subhistory split path/to/sub/ subproj
-3. git checkout subproj -b add-bar
-   echo bar > bar
-   git add bar
-   git commit -m 'Add bar'
-4. git checkout master -b merge-bar
-   git-subhistory merge path/to/sub/ add-bar
+  # 0. setup git repo, empty folders
+  git init
+  mkdir -p path/to/sub/
+  # 1. create and add foo in Sub, commit to Main
+  echo foo > path/to/sub/foo
+  git add path/to/sub/foo
+  git commit -m 'Add path/to/sub/foo'
+  # 2. split out commit history of just Sub, rooted in path/to/sub/
+  git-subhistory split path/to/sub/ subproj
+  # 3. create, add, and commit bar to Sub
+  git checkout subproj -b add-bar
+  echo bar > bar
+  git add bar
+  git commit -m 'Add bar'
+  # 4. merge in "upstream" commits to Sub
+  git checkout master -b merge-bar
+  git-subhistory merge path/to/sub/ add-bar
 
  \   \   |   /   /
 - THE COOL THING: -  merge-bar was a fast-forward from master! Even when
