@@ -3,7 +3,7 @@
 
 # util fn (at the top 'cos used in options parsing)
 die () {
-	echo "$@" >&2
+	echo "fatal:" "$@" >&2
 	exit 1
 }
 
@@ -45,7 +45,7 @@ do
 		test "$1" = "-B" && force_newbranch=1
 		shift
 		newbranch="$1"
-		test "$newbranch" || die "Branch name must be nonempty"
+		test "$newbranch" || die "branch name must be nonempty"
 	;;
 	--) break ;;
 	esac
@@ -82,11 +82,11 @@ fi
 # Subcommands
 
 subhistory_split () {
-	die "fatal: '$subcommand' not yet implemented"
+	die "'$subcommand' not yet implemented"
 }
 
 subhistory_merge () {
-	die "fatal: '$subcommand' not yet implemented"
+	die "'$subcommand' not yet implemented"
 }
 
 #######
@@ -97,7 +97,7 @@ shift
 
 case "$subcommand" in
 	split|merge) ;;
-	*) die "fatal: unknown subcommand '$subcommand'" ;;
+	*) die "unknown subcommand '$subcommand'" ;;
 esac
 
 "subhistory_$subcommand" "$@"
