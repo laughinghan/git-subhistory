@@ -67,7 +67,7 @@ else
 	}
 fi
 
-if test "$verbose"
+if test "$verbose" -a ! "$quiet"
 then
 	elaborate () {
 		echo "$@" >&2
