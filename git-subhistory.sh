@@ -78,6 +78,12 @@ else
 	}
 fi
 
+usage () {
+	echo "$@" >&2
+	echo >&2
+	exec "$0" -h
+}
+
 ##############
 # Subcommands
 
@@ -97,7 +103,7 @@ shift
 
 case "$subcommand" in
 	split|merge) ;;
-	*) die "unknown subcommand '$subcommand'" ;;
+	*) usage "unknown subcommand '$subcommand'" ;;
 esac
 
 "subhistory_$subcommand" "$@"
