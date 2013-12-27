@@ -103,12 +103,17 @@ subhistory_split () {
 	elaborate "'split' subproj_path='$subproj_path' newbranch='$newbranch'" \
 		"force_newbranch='$force_newbranch'"
 
+	# filter-branch needs to be run from the toplevel of the working tree
+	# (need ./ because these may return empty strings)
+	orig_wd="./$(git rev-parse --show-prefix)"
+	cd ./$(git rev-parse --show-cdup)
+
 	rm -rf "$(git rev-parse --git-dir)/refs/subhistory-tmp"
 
 	git branch "$newbranch" $force_newbranch || exit $?
 	git filter-branch \
 		--original refs/subhistory-tmp \
-		--subdirectory-filter "$subproj_path" \
+		--subdirectory-filter "$orig_wd/$subproj_path" \
 		-- "$newbranch" \
 		2>&1 | say_stdin || exit $?
 

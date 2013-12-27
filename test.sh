@@ -62,6 +62,11 @@ say '2. split out commit history of just Sub, rooted in path/to/sub/'
 ../git-subhistory.sh split path/to/sub/ -b subproj -v $QUIET
 assert_is_subcommit_of subproj master
 
+say '  (also try split from not toplevel of repo)'
+cd path/to/sub/
+../../../../git-subhistory.sh split . -b subproj-split-from-inside -v $QUIET
+assert_is_subcommit_of subproj-split-from-inside master
+
 ###############
 # Test Summary
 
