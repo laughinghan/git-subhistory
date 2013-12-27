@@ -34,6 +34,13 @@ commit_non_hash_info () {
 	git log $1 --no-walk --pretty='format:%an%n%ae%n%ai%n%cn%n%ce%n%ci%n%B'
 }
 
+assert_is_subcommit_of () {
+	assert "tree of $1 matches subtree of $2" \
+		$(git rev-parse $1:) = $(git rev-parse $2:path/to/sub/)
+	assert "$1 commit other info matches $2" \
+	"$(commit_non_hash_info $1)" = "$(commit_non_hash_info $2)"
+}
+
 #######
 # Main
 
@@ -53,10 +60,7 @@ git commit -m 'Add path/to/sub/foo' $QUIET
 say
 say '2. split out commit history of just Sub, rooted in path/to/sub/'
 ../git-subhistory.sh split path/to/sub/ -b subproj -v $QUIET
-assert 'tree of subproj matches subtree of master' \
-	$(git rev-parse subproj:) = $(git rev-parse master:path/to/sub/)
-assert 'subproj commit other info matches master' \
-	"$(commit_non_hash_info subproj)" = "$(commit_non_hash_info master)"
+assert_is_subcommit_of subproj master
 
 ###############
 # Test Summary
