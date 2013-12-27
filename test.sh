@@ -1,9 +1,15 @@
 #!/bin/sh
 
+##################
+# Options Parsing
+
 case "$1" in
 	-s|--summary|--summarize) QUIET=-q; say () { :; } ;;
 	*) QUIET=; say () { echo "$@"; } ;;
 esac
+
+####################
+# Testing Framework
 
 asserts_count=0
 fails_count=0
@@ -20,6 +26,9 @@ assert () {
 		echo "!!! Failed Assert: $msg"
 	fi
 }
+
+#######
+# Main
 
 say '0. setup empty git repo, empty folders'
 rm -rf test-repo
@@ -39,6 +48,9 @@ say '2. split out commit history of just Sub, rooted in path/to/sub/'
 ../git-subhistory.sh split path/to/sub/ -b subproj -v $QUIET
 assert 'tree of subproj matches subtree of master' \
 	$(git rev-parse subproj:) = $(git rev-parse master:path/to/sub/)
+
+###############
+# Test Summary
 
 say
 if test $fails_count = 0
