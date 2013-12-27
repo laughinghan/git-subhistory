@@ -12,10 +12,13 @@ assert () {
 	asserts_count=$(($asserts_count + 1))
 	msg="$1"
 	shift
-	test "$@" || {
+	if test "$@"
+	then
+		say "Assert: $msg"
+	else
 		fails_count=$(($fails_count + 1))
 		echo "!!! Failed Assert: $msg"
-	}
+	fi
 }
 
 say '0. setup empty git repo, empty folders'
