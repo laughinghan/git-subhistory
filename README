@@ -58,7 +58,7 @@ This commit graph is what you'd get if you ran these commands:
 
 DESCRIPTIONS
 
-git-subhistory split <subproj-path> (-b | -B) <subproj-branch>
+git-subhistory split <subproj-path> [(-b | -B) <subproj-branch>]
 
   `git-subhistory split` is pretty much the same as `git-subtree split`:
   it generates a completely new, synthetic commit graph of the history
