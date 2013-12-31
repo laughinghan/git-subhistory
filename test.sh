@@ -59,13 +59,20 @@ git commit -m 'Add path/to/sub/foo' $QUIET
 
 say
 say '2. split out commit history of just Sub, rooted in path/to/sub/'
+../git-subhistory.sh split path/to/sub/ -v $QUIET
+assert_is_subcommit_of SPLIT_HEAD master
+
+say
+say '  (or with branch name)'
 ../git-subhistory.sh split path/to/sub/ -b subproj -v $QUIET
 assert_is_subcommit_of subproj master
+# TODO: make sure SPLIT_HEAD is not a symref to subproj
 
+say
 say '  (also try split from not toplevel of repo)'
 cd path/to/sub/
-../../../../git-subhistory.sh split . -b subproj-split-from-inside -v $QUIET
-assert_is_subcommit_of subproj-split-from-inside master
+../../../../git-subhistory.sh split . -v $QUIET
+assert_is_subcommit_of SPLIT_HEAD master
 
 ###############
 # Test Summary

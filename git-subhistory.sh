@@ -94,14 +94,23 @@ usage () {
 # Subcommands
 
 subhistory_split () {
-	test "$newbranch" || usage "branch name required for 'split'"
-
 	test $# = 1 || usage "wrong number of arguments to 'split'"
 	subproj_path="$1"
 	test -d "$subproj_path" || die "$subproj_path: Not a directory"
 
 	elaborate "'split' subproj_path='$subproj_path' newbranch='$newbranch'" \
 		"force_newbranch='$force_newbranch'"
+
+	if test "$newbranch"
+	then
+		git branch "$newbranch" $force_newbranch || exit $?
+		split_head="$(git rev-parse --symbolic-full-name "$newbranch")"
+		git symbolic-ref SPLIT_HEAD "$split_head" || exit $?
+		elaborate "Created/reset branch $newbranch (symref-ed as SPLIT_HEAD)"
+	else
+		git update-ref --no-deref SPLIT_HEAD HEAD || exit $?
+		elaborate "Set detached SPLIT_HEAD"
+	fi
 
 	# filter-branch needs to be run from the toplevel of the working tree
 	# (need ./ because these may return empty strings)
@@ -110,14 +119,26 @@ subhistory_split () {
 
 	rm -rf "$(git rev-parse --git-dir)/refs/subhistory-tmp"
 
-	git branch "$newbranch" $force_newbranch || exit $?
 	git filter-branch \
 		--original refs/subhistory-tmp \
 		--subdirectory-filter "$orig_wd/$subproj_path" \
-		-- "$newbranch" \
+		-- SPLIT_HEAD \
 		2>&1 | say_stdin || exit $?
 
 	rm -rf "$(git rev-parse --git-dir)/refs/subhistory-tmp"
+
+	git update-ref --no-deref SPLIT_HEAD SPLIT_HEAD || exit $?
+	elaborate 'un-symref-ed SPLIT_HEAD'
+
+	say
+	say "Split out history of $subproj_path to $(
+		if test "$newbranch"
+		then
+			echo "$newbranch (also SPLIT_HEAD)"
+		else
+			echo "SPLIT_HEAD"
+		fi
+	)"
 }
 
 subhistory_merge () {
