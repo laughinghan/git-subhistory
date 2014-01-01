@@ -94,6 +94,7 @@ usage () {
 # Subcommands
 
 subhistory_split () {
+	# check args
 	test $# = 1 || usage "wrong number of arguments to 'split'"
 	subproj_path="$1"
 	test -d "$subproj_path" || die "$subproj_path: Not a directory"
@@ -101,6 +102,7 @@ subhistory_split () {
 	elaborate "'split' subproj_path='$subproj_path' newbranch='$newbranch'" \
 		"force_newbranch='$force_newbranch'"
 
+	# setup SPLIT_HEAD
 	if test "$newbranch"
 	then
 		git branch "$newbranch" $force_newbranch || exit $?
