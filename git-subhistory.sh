@@ -94,12 +94,9 @@ usage () {
 # Subcommands
 
 subhistory_split () {
-	# check args
-	test $# = 1 || usage "wrong number of arguments to 'split'"
-	subproj_path="$1"
-	test -d "$subproj_path" || die "$subproj_path: Not a directory"
+	test $# = 0 || usage "wrong number of arguments to 'split'"
 
-	elaborate "'split' subproj_path='$subproj_path' newbranch='$newbranch'" \
+	elaborate "'split' path_to_sub='$path_to_sub' newbranch='$newbranch'" \
 		"force_newbranch='$force_newbranch'"
 
 	# setup SPLIT_HEAD
@@ -114,26 +111,17 @@ subhistory_split () {
 		elaborate "Set detached SPLIT_HEAD"
 	fi
 
-	# filter-branch needs to be run from the toplevel of the working tree
-	# (need ./ because these may return empty strings)
-	orig_wd="./$(git rev-parse --show-prefix)"
-	cd ./$(git rev-parse --show-cdup)
-
-	rm -rf "$(git rev-parse --git-dir)/refs/subhistory-tmp"
-
 	git filter-branch \
-		--original refs/subhistory-tmp \
-		--subdirectory-filter "$orig_wd/$subproj_path" \
+		--original subhistory-tmp/filter-branch-backup \
+		--subdirectory-filter "$path_to_sub" \
 		-- SPLIT_HEAD \
 		2>&1 | say_stdin || exit $?
-
-	rm -rf "$(git rev-parse --git-dir)/refs/subhistory-tmp"
 
 	git update-ref --no-deref SPLIT_HEAD SPLIT_HEAD || exit $?
 	elaborate 'un-symref-ed SPLIT_HEAD'
 
 	say
-	say "Split out history of $subproj_path to $(
+	say "Split out history of $path_to_sub to $(
 		if test "$newbranch"
 		then
 			echo "$newbranch (also SPLIT_HEAD)"
@@ -158,4 +146,20 @@ case "$subcommand" in
 	*) usage "unknown subcommand '$subcommand'" ;;
 esac
 
+# All subcommands need:
+
+# "path/to/sub/" (relative to toplevel) from <subproj-path> (relative to current
+# working directory); bonus: normalize away .'s and //'s, guarantee trailing /
+path_to_sub="$(cd "$1" && git rev-parse --show-prefix)" || exit $?
+shift
+
+# to be at toplevel (for filter-branch); need ./ in case of empty string
+cd ./$(git rev-parse --show-cdup) || exit $?
+
+# a temporary directory for e.g. filter-branch backups
+tmp_dir="$(git rev-parse --git-dir)/subhistory-tmp"
+mkdir "$tmp_dir" || exit $?
+
 "subhistory_$subcommand" "$@"
+
+rm -rf "$tmp_dir"
