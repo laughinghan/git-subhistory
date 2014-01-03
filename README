@@ -81,7 +81,10 @@ COMPARISON WITH GIT-SUBTREE
 
 I actually think git-subtree was halfway there, it got splitting pretty
 much right, but then did merging wrong and had to needlessly complicate
-splitting to deal with the broken merging.
+splitting to deal with the broken merging. In fact, I started out trying
+to fork git-subtree, intending to add an alternative way to merge,
+until I discovered that `git-subtree split` was now more complicated
+than `git filter-branch --subdirectory-filter`.
 
 This commit graph is what you'd get if you ran the same commands from
 the example above but replaced 'git-subhistory' with 'git-subtree -P':
