@@ -117,15 +117,14 @@ actually does `merge --strategy subtree`, which is a fine and dandy
 merge option that would let you include Sub in Main very similarly to
 git-subhistory: in Main, you can `merge -s subtree` a commit from an
 upstream Sub repo, and changes to Sub from there will be merged with
-changes to path/to/sub/ in the superproject. Importantly, as far as
-git-merge is concerned it's just some strategy for merging the trees
-of two commits, so it normally creates a merge commit whose parents
-are commits from each of Main and Sub (notice in the example that the
-subproject files, foo and bar, are at different paths between the
-parents of merge-bar). If merging in upstream changes is all you need,
-this is awesome: next `merge -s subtree`, the last `merge -s subtree`-ed
-in commit will be the merge base, and Sub's commit history shows up in
-Main's commit history.
+changes to path/to/sub/ in Main. Importantly, as far as git-merge is
+concerned it's just some strategy for merging the trees of two commits,
+so it normally creates a merge commit whose parents are commits from
+each of Main and Sub (notice in the example that the subproject files,
+foo and bar, are at different paths between the parents of merge-bar).
+If merging in upstream changes is all you need, this is awesome: next
+`merge -s subtree`, the last `merge -s subtree`-ed in commit will be the
+merge base, and Sub's commit history shows up in Main's commit history.
 
 What is not awesome is that if you commit changes to Sub in the Main
 repo, split them out into synthetic commits that get merged into an
