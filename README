@@ -11,6 +11,10 @@ by the "Main" repo, and in fact no other git tools know or care that
 "Sub's" directory (call it "path/to/sub/") contains a subproject, as far
 as they're concerned it's just another subdirectory of "Main".
 
+Unlike git-submodule and git-subtree, git-subhistory does NOT "need to
+[be run] from the toplevel of the working tree", you can run it wherever
+you damn well please, even in "path/to/sub/" with . as <subproj-path>.
+
 EXAMPLE
 
 This commit graph is what you'd get if you ran these commands:
