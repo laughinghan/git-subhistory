@@ -28,7 +28,7 @@ assert () {
 }
 
 #########
-# Utils: commit_non_hash_info(), assert_is_subcommit_of()
+# Utils: commit_non_hash_info(), assert_is_subcommit_of(), rest_of_tree()
 
 commit_non_hash_info () {
 	git log $1 --no-walk --pretty='format:%an%n%ae%n%ai%n%cn%n%ce%n%ci%n%B'
@@ -41,6 +41,14 @@ assert_is_subcommit_of () {
 	"$(commit_non_hash_info $1)" = "$(commit_non_hash_info $2)"
 }
 
+rest_of_tree () (
+	export GIT_INDEX_FILE=.git/index.tmp
+	git read-tree $1
+	git rm --cached -r path/to/sub/ -q
+	git write-tree
+	rm .git/index.tmp
+)
+
 #######
 # Main
 
@@ -48,6 +56,9 @@ say '0. setup empty git repo, empty folders'
 rm -rf test-repo
 git init test-repo $QUIET
 cd test-repo
+echo stuff-outside-Sub > stuff-outside-Sub
+git add stuff-outside-Sub
+git commit -m 'Add stuff outside Sub' $QUIET
 
 mkdir -p path/to/sub/
 
@@ -73,6 +84,28 @@ say '  (also try split from not toplevel of repo)'
 cd path/to/sub/
 ../../../../git-subhistory.sh split . -v $QUIET
 assert_is_subcommit_of SPLIT_HEAD master
+cd ../../../
+
+say
+say '3. create, add, and commit bar to Sub'
+git checkout subproj -b add-bar $QUIET
+echo bar > bar
+git add bar
+git commit -m 'Add bar' $QUIET
+
+say
+say '  (also a commit whose parent was not split from Main)'
+echo another-commit-to-rewrite > another-commit-to-rewrite
+git add another-commit-to-rewrite
+git commit -m 'Add another commit to rewrite' $QUIET
+
+say
+say '4. merge in "upstream" commits to Sub'
+git checkout master -b merge-bar $QUIET
+../git-subhistory.sh merge path/to/sub/ add-bar -v $QUIET
+assert_is_subcommit_of add-bar merge-bar
+assert "rest of tree on merge-bar is the same as master" \
+	$(rest_of_tree merge-bar) = $(rest_of_tree master)
 
 ###############
 # Test Summary

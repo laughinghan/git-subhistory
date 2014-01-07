@@ -93,6 +93,9 @@ usage () {
 ##############
 # Subcommands
 
+# TODO: find a better place to put this
+commit_filter='git commit-tree "$@"' # default/noop
+
 subhistory_split () {
 	test $# = 0 || usage "wrong number of arguments to 'split'"
 
@@ -114,6 +117,7 @@ subhistory_split () {
 	git filter-branch \
 		--original subhistory-tmp/filter-branch-backup \
 		--subdirectory-filter "$path_to_sub" \
+		--commit-filter "$commit_filter" \
 		-- SPLIT_HEAD \
 		2>&1 | say_stdin || exit $?
 
@@ -132,7 +136,81 @@ subhistory_split () {
 }
 
 subhistory_merge () {
-	die "'$subcommand' not yet implemented"
+	# args
+	test $# = 1 || usage "wrong number of arguments to 'merge'"
+	merge_from="$1"
+	git update-ref SUBHISTORY_MERGE_HEAD "$merge_from" || exit $?
+
+	elaborate "'merge' path_to_sub='$path_to_sub' merge_from='$merge_from'" \
+		"SUBHISTORY_MERGE_HEAD='$(git rev-parse SUBHISTORY_MERGE_HEAD)'"
+
+	# split HEAD
+	mkdir "$tmp_dir/split-to-orig-map" || exit $?
+	commit_filter='
+		rewritten=$(git commit-tree "$@") &&
+		tmp_dir="$(git rev-parse --git-dir)/subhistory-tmp" &&
+		echo $GIT_COMMIT > "$tmp_dir/split-to-orig-map/$rewritten" &&
+		echo $rewritten'
+	subhistory_split || exit $?
+	say # blank line after summary of subhistory_split
+
+	# build the synthetic commits on top of the original Main commits, by
+	# filtering for parents that were splits and swapping them out for their
+	# originals
+	parent_filter='
+		tmp_dir="$(git rev-parse --git-dir)/subhistory-tmp" &&
+		set -- $(cat) &&
+		while test $# != 0
+		do
+			printf -- "-p %s " \
+				$(cat "$tmp_dir/split-to-orig-map/$2" 2>/dev/null || echo $2) &&
+			shift 2
+		done'
+
+	# write synthetic commits that make the same changes as the Sub commits but
+	# to the subtree of Main, by rewriting each Sub commit as having the same tree
+	# as either the original Main commit the Sub commit's parent was split from or
+	# the new synthetic parent commit that's been rewritten as a Main commit, but
+	# with the subtree overwritten.
+	# - Complication: there can be >1 parent, with different Main trees. Luckily,
+	#   differences in Main trees could only possibly come from Main commits that
+	#   are ancestors of HEAD [Footnote], which must have been merged at some
+	#   point in the history of HEAD, since HEAD itself is a single commit.
+	#   Finding the earliest such merge that won't conflict with HEAD is
+	#   nontrivial, since the same two commits could be merged in any number of
+	#   commits with any tree at all. Leave finding the earliest merged tree as
+	#   TODO, for now just use HEAD, which is guaranteed not to merge conflict
+	#   with itself.
+	#   + [Footnote]: others weren't split into ancestors of SPLIT_HEAD, and hence
+	#     aren't in the split-to-orig-map, and thus couldn't be a rewritten
+	#     parent. This is actually why merge explicitly doesn't invert splitting
+	#     of all commits, it only inverts splitting of ancestors of HEAD.
+	index_filter='
+		tmp_dir="$(git rev-parse --git-dir)/subhistory-tmp" &&
+		if git rev-parse --verify -q $GIT_COMMIT^2 # if $GIT_COMMIT is a merge
+		then
+			Main_tree=HEAD # TODO: find earliest merged tree
+		else
+			parent=$(git rev-parse $GIT_COMMIT^) &&
+			Main_tree=$(cat "$tmp_dir/split-to-orig-map/$parent" 2>/dev/null \
+				|| map $parent)
+		fi &&
+		git read-tree $Main_tree &&
+		git rm --cached -r '"'$path_to_sub'"' -q &&
+		git read-tree --prefix='"'$path_to_sub'"' $GIT_COMMIT'
+
+	git filter-branch \
+		--original subhistory-tmp/filter-branch-backup \
+		--parent-filter "$parent_filter" \
+		--index-filter "$index_filter"  \
+		-- SPLIT_HEAD..SUBHISTORY_MERGE_HEAD \
+		2>&1 | say_stdin || exit $?
+
+	# TODO: non-fast-foward merges' default commit messages should mention the
+	# $merge_from branchname rather than all be
+	#     Merge commit 'SUBHISTORY_MERGE_HEAD' into <current-branchname>
+	# charming though that may be
+	git merge SUBHISTORY_MERGE_HEAD
 }
 
 #######
