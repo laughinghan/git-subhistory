@@ -206,11 +206,54 @@ subhistory_merge () {
 		-- SPLIT_HEAD..SUBHISTORY_MERGE_HEAD \
 	2>&1 | say_stdin || exit $?
 
-	# TODO: non-fast-foward merges' default commit messages should mention the
-	# $merge_from branchname rather than all be
-	#     Merge commit 'SUBHISTORY_MERGE_HEAD' into <current-branchname>
-	# charming though that may be
-	git merge SUBHISTORY_MERGE_HEAD
+	say
+	git merge SUBHISTORY_MERGE_HEAD --edit -m "$(
+		echo "$(merge_name "$merge_from" | git fmt-merge-msg \
+			| sed 's/^Merge /Merge subhistory /') under $path_to_sub"
+	)" \
+	2>&1 | say_stdin
+}
+
+# # # # # #
+# Util Fn, only used in one place, whose functionality really should be part of
+# a git utility but isn't, and had to be copied from the git source code.
+
+# As part of generating merge commit messages, belongs in fmt-merge-msg, but
+# had to be copied from contrib/examples/git-merge.sh (latest master branch).
+# Only modification: doesn't expect global var $GIT_DIR.
+# https://github.com/git/git/blob/932f7e47699993de0f6ad2af92be613994e40afe/contrib/examples/git-merge.sh#L140-L171
+merge_name () {
+	remote="$1"
+	rh=$(git rev-parse --verify "$remote^0" 2>/dev/null) || return
+	if truname=$(expr "$remote" : '\(.*\)~[0-9]*$') &&
+		git show-ref -q --verify "refs/heads/$truname" 2>/dev/null
+	then
+		echo "$rh		branch '$truname' (early part) of ."
+		return
+	fi
+	if found_ref=$(git rev-parse --symbolic-full-name --verify \
+							"$remote" 2>/dev/null)
+	then
+		expanded=$(git check-ref-format --branch "$remote") ||
+			exit
+		if test "${found_ref#refs/heads/}" != "$found_ref"
+		then
+			echo "$rh		branch '$expanded' of ."
+			return
+		elif test "${found_ref#refs/remotes/}" != "$found_ref"
+		then
+			echo "$rh		remote branch '$expanded' of ."
+			return
+		fi
+	fi
+	GIT_DIR="$(git rev-parse --git-dir)"
+	if test "$remote" = "FETCH_HEAD" -a -r "$GIT_DIR/FETCH_HEAD"
+	then
+		sed -e 's/	not-for-merge	/		/' -e 1q \
+			"$GIT_DIR/FETCH_HEAD"
+		return
+	fi
+	echo "$rh		commit '$remote'"
 }
 
 #######
