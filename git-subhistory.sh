@@ -119,7 +119,7 @@ subhistory_split () {
 		--subdirectory-filter "$path_to_sub" \
 		--commit-filter "$commit_filter" \
 		-- SPLIT_HEAD \
-		2>&1 | say_stdin || exit $?
+	2>&1 | say_stdin || exit $?
 
 	git update-ref --no-deref SPLIT_HEAD SPLIT_HEAD || exit $?
 	elaborate 'un-symref-ed SPLIT_HEAD'
@@ -204,7 +204,7 @@ subhistory_merge () {
 		--parent-filter "$parent_filter" \
 		--index-filter "$index_filter"  \
 		-- SPLIT_HEAD..SUBHISTORY_MERGE_HEAD \
-		2>&1 | say_stdin || exit $?
+	2>&1 | say_stdin || exit $?
 
 	# TODO: non-fast-foward merges' default commit messages should mention the
 	# $merge_from branchname rather than all be
