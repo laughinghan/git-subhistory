@@ -38,48 +38,116 @@ git-subhistory merge <subproj-path> <subproj-branch>
 
 EXAMPLE
 
-This commit graph is what you'd get if you ran these commands:
-(commits are represented by, in parens, the files in each commit
- (e.g. what `git ls-files` would print when the commit is checked out);
- branch names clearly point at commits)
+Let's say we have history like so:
 
-    master                    merge-bar
-       \                           \
-(path/to/sub/foo)<--(path/to/sub/foo, path/to/sub/bar)
+  $ git log --graph --oneline --decorate --stat --all
+  * c79da42 (HEAD, master) Add another Main thing
+  |  another-Main-thing | 1 +
+  |  1 file changed, 1 insertion(+)
+  * 6285d3c Add another Sub thing
+  |  path/to/sub/another-Sub-thing | 1 +
+  |  1 file changed, 1 insertion(+)
+  * 81ac521 Add a Sub thing
+  |  path/to/sub/a-Sub-thing | 1 +
+  |  1 file changed, 1 insertion(+)
+  * c242f3e Add a Main thing
+     a-Main-thing | 1 +
+     1 file changed, 1 insertion(+)
 
-         subproj   add-bar
-             \         \
-            (foo)<--(foo, bar)
+We can split out the commit history of just Sub in path/to/sub/:
 
-(Note 2 disconnected lineages of commits.)
+  $ ../git-subhistory.sh split path/to/sub/ -B subproj
+  Rewrite 6285d3c68b3eb5f0cd2cb8c376c0d83a0f2b7c0a (2/2)
+  Ref 'refs/heads/subproj' was rewritten
 
-  # 0. setup git repo, empty folders
-  git init
-  mkdir -p path/to/sub/
+  Split out history of path/to/sub/ to subproj (also SPLIT_HEAD)
+  $ git log --graph --oneline --decorate --stat --all
+  * c79da42 (HEAD, master) Add another Main thing
+  |  another-Main-thing | 1 +
+  |  1 file changed, 1 insertion(+)
+  * 6285d3c Add another Sub thing
+  |  path/to/sub/another-Sub-thing | 1 +
+  |  1 file changed, 1 insertion(+)
+  * 81ac521 Add a Sub thing
+  |  path/to/sub/a-Sub-thing | 1 +
+  |  1 file changed, 1 insertion(+)
+  * c242f3e Add a Main thing
+     a-Main-thing | 1 +
+     1 file changed, 1 insertion(+)
+  * 13aa18a (subproj) Add another Sub thing
+  |  another-Sub-thing | 1 +
+  |  1 file changed, 1 insertion(+)
+  * 4970e20 Add a Sub thing
+     a-Sub-thing | 1 +
+     1 file changed, 1 insertion(+)
 
-  # 1. create and add foo in Sub, commit to Main
-  echo foo > path/to/sub/foo
-  git add path/to/sub/foo
-  git commit -m 'Add path/to/sub/foo'
+Notice 2 disconnected histories here, the untouched 'master' branch, and
+this new 'subproj' branch, which has just the history of 'path/to/sub/',
+rooted inside. 'subproj' can now be pushed to a repo for just Sub, which
+can be developed independently and included in other projects. Let's say
+that happens, and some great changes are made upstream, and you pull
+them in:
 
-  # 2. split out commit history of just Sub, rooted in path/to/sub/
-  git-subhistory split path/to/sub/ subproj
+  $ git log --graph --oneline --decorate --stat subproj
+  * d535a7c (subproj) Extend Sub further
+  |  extend-Sub-further | 1 +
+  |  1 file changed, 1 insertion(+)
+  * b7909ee Extend Sub somehow
+  |  extend-Sub-somehow | 1 +
+  |  1 file changed, 1 insertion(+)
+  * 13aa18a Add another Sub thing
+  |  another-Sub-thing | 1 +
+  |  1 file changed, 1 insertion(+)
+  * 4970e20 Add a Sub thing
+     a-Sub-thing | 1 +
+     1 file changed, 1 insertion(+)
 
-  # 3. create, add, and commit bar to Sub
-  git checkout subproj -b add-bar
-  echo bar > bar
-  git add bar
-  git commit -m 'Add bar'
+Here's where the magic happens: we can easily merge these changes into
+Main **using the "Add another Sub thing" commit as the merge base**:
 
-  # 4. merge in "upstream" commits to Sub
-  git checkout master -b merge-bar
-  git-subhistory merge path/to/sub/ add-bar
+  $ ../git-subhistory.sh merge path/to/sub/ subproj
+  Rewrite 6285d3c68b3eb5f0cd2cb8c376c0d83a0f2b7c0a (2/2)
+  Ref 'SPLIT_HEAD' was rewritten
 
- \   \   |   /   /
-- THE COOL THING: -  merge-bar was a fast-forward from master! Even when
- /   /   |   \   \   you do merge --no-ff, master is exactly the right
-                     merge base.
+  Split out history of path/to/sub/ to SPLIT_HEAD
 
+  Rewrite d535a7c1c90b42d66eb0938172538aa5fc878460 (2/2)
+  Ref 'SUBHISTORY_MERGE_HEAD' was rewritten
+
+  Merge made by the 'recursive' strategy.
+   path/to/sub/extend-Sub-further | 1 +
+   path/to/sub/extend-Sub-somehow | 1 +
+   2 files changed, 2 insertions(+)
+   create mode 100644 path/to/sub/extend-Sub-further
+   create mode 100644 path/to/sub/extend-Sub-somehow
+  $ git log --graph --oneline --decorate --stat
+  *   2626aba (HEAD, master) Merge subhistory branch 'subproj' under path/to/sub/
+  |\
+  | * ff9f142 Extend Sub further
+  | |  path/to/sub/extend-Sub-futher | 1 +
+  | |  1 file changed, 1 insertion(+)
+  | * e2d4c00 Extend Sub somehow
+  | |  path/to/sub/extend-Sub-somehow | 1 +
+  | |  1 file changed, 1 insertion(+)
+  * | c79da42 Add another Main thing
+  |/
+  |    another-Main-thing | 1 +
+  |    1 file changed, 1 insertion(+)
+  * 6285d3c Add another Sub thing
+  |  path/to/sub/another-Sub-thing | 1 +
+  |  1 file changed, 1 insertion(+)
+  * 81ac521 Add a Sub thing
+  |  path/to/sub/a-Sub-thing | 1 +
+  |  1 file changed, 1 insertion(+)
+  * c242f3e Add a Main thing
+     a-Main-thing | 1 +
+     1 file changed, 1 insertion(+)
+
+See that? The commits on 'subproj' that extended Sub after adding
+another-Sub-thing were effortlessly transmuted into commits that extend
+Sub inside path/to/sub/ after adding path/to/sub/another-Sub-thing,
+allowing them to merge cleanly like they clearly should, no commits
+duplicated.
 
 COMPARISON WITH GIT-SUBTREE
 
@@ -90,21 +158,42 @@ to fork git-subtree, intending to add an alternative way to merge,
 until I discovered that `git-subtree split` was now more complicated
 than `git filter-branch --subdirectory-filter`.
 
-This commit graph is what you'd get if you ran the same commands from
-the example above but replaced 'git-subhistory' with 'git-subtree -P':
+If you went through the example above with equivalent git-subtree
+commands, the history after splitting would be identical (right down to
+the hashes--the complication is only when you've `git-subtree merge`-ed
+before into the branch being split), but after merging, you'd get:
 
-    master
-       \
-(path/to/sub/foo)<---------------\           merge-bar
-                                  \               \
-        subproj    add-bar         (path/to/sub/foo, path/to/sub/bar)
-            \          \          /
-           (foo)<--(foo, bar)<---/
+  $ git log --graph --oneline --decorate --stat
+  *   0584b9a (HEAD, master) Merge commit 'd535a7c1c90b42d66eb0938172538aa5fc878460'
+  |\
+  | * d535a7c (subproj) Extend Sub further
+  | |  extend-Sub-further | 1 +
+  | |  1 file changed, 1 insertion(+)
+  | * b7909ee Extend Sub somehow
+  | |  extend-Sub-somehow | 1 +
+  | |  1 file changed, 1 insertion(+)
+  | * 13aa18a Add another Sub thing
+  | |  another-Sub-thing | 1 +
+  | |  1 file changed, 1 insertion(+)
+  | * 4970e20 Add a Sub thing
+  |    a-Sub-thing | 1 +
+  |    1 file changed, 1 insertion(+)
+  * c79da42 Add another Main thing
+  |  another-Main-thing | 1 +
+  |  1 file changed, 1 insertion(+)
+  * 6285d3c Add another Sub thing
+  |  path/to/sub/another-Sub-thing | 1 +
+  |  1 file changed, 1 insertion(+)
+  * 81ac521 Add a Sub thing
+  |  path/to/sub/a-Sub-thing | 1 +
+  |  1 file changed, 1 insertion(+)
+  * c242f3e Add a Main thing
+     a-Main-thing | 1 +
+     1 file changed, 1 insertion(+)
 
-(Note that merge-bar is a merge commit, with 2 parents.)
-
-You can see in the example that the commit creating foo in Main was
-split into a commit creating foo in Sub just like you'd expect.
+In this example, the commits adding path/to/sub/a-Sub-thing and
+path/to/sub/another-Sub-thing to Main were split into commits adding
+a-Sub-thing and another-Sub-thing to Sub just like you'd want.
 `git-subhistory split` doesn't just serve the same purpose as
 `git-subtree split`, it actually does almost exactly the same thing and
 often generates identical commits with identical hashes, but is
@@ -124,11 +213,12 @@ upstream Sub repo, and changes to Sub from there will be merged with
 changes to path/to/sub/ in Main. Importantly, as far as git-merge is
 concerned it's just some strategy for merging the trees of two commits,
 so it normally creates a merge commit whose parents are commits from
-each of Main and Sub (notice in the example that the subproject files,
-foo and bar, are at different paths between the parents of merge-bar).
-If merging in upstream changes is all you need, this is awesome: next
-`merge -s subtree`, the last `merge -s subtree`-ed in commit will be the
-merge base, and Sub's commit history shows up in Main's commit history.
+each of Main and Sub (notice in the example that the subproject files
+a-Sub-thing and another-Sub-thing are at different paths between the
+parents of HEAD). If merging in upstream changes is all you need, this
+is awesome: next `merge -s subtree`, the last `merge -s subtree`-ed in
+commit will be the merge base, and Sub's commit history shows up in
+Main's commit history.
 
 What is not awesome is that if you commit changes to Sub in the Main
 repo, split them out into synthetic commits that get merged into an
@@ -137,7 +227,8 @@ into Main, the synthetic commits are totally different from the Main
 commits that changed Sub, neither is a fast-forward of the other, they
 won't be a merge base, and they will both show up in Main's commit
 history, essentially duplicating all commits to Sub made in Main (notice
-in the example, 2 ancestors of merge-bar created and added foo :( ).
+in the example, 2 ancestors of HEAD create and add a-Sub-thing and
+another-Sub-thing :( ).
 
 For this reason, most git-subtree tutorials I've seen actually recommend
 using --squash when merging, which creates a synthetic commit combining
