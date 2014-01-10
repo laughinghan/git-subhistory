@@ -160,11 +160,11 @@ subhistory_merge () {
 	parent_filter='
 		tmp_dir="$(git rev-parse --git-dir)/subhistory-tmp" &&
 		set -- $(cat) &&
-		while test $# != 0
+		for parent
 		do
-			printf -- "-p %s " \
-				$(cat "$tmp_dir/split-to-orig-map/$2" 2>/dev/null || echo $2) &&
-			shift 2
+			test $parent != -p \
+			&& cat "$tmp_dir/split-to-orig-map/$parent" 2>/dev/null \
+			|| echo $parent
 		done'
 
 	# write synthetic commits that make the same changes as the Sub commits but
