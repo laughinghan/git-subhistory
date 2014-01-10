@@ -271,6 +271,7 @@ esac
 
 # "path/to/sub/" (relative to toplevel) from <subproj-path> (relative to current
 # working directory); bonus: normalize away .'s and //'s, guarantee trailing /
+test "$1" || usage "first arg <subproj-path> is required"
 path_to_sub="$(cd "$1" && git rev-parse --show-prefix)" || exit $?
 shift
 
