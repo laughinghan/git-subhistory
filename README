@@ -6,10 +6,11 @@ INTRO
 
 git-subhistory, like git-submodule and git-subtree, manages subprojects
 (call one "Sub") in a superproject (call it "Main") git repo. Like
-git-subtree but unlike git-submodule, "Sub's" files are tracked directly
-by the "Main" repo, and in fact no other git tools know or care that
-"Sub's" directory (call it "path/to/sub/") contains a subproject, as far
-as they're concerned it's just another subdirectory of "Main".
+git-subtree but unlike git-submodule, git-subhistory is stateless, you
+pass "Sub's" subdirectory (call it "path/to/sub/") as an argument to
+git-subhistory but it's not specially marked in any way, "Sub's" files
+are tracked directly by the "Main" repo like any other files, and no
+other git tools know or care that "path/to/sub/" contains a subproject.
 
 Unlike git-submodule and git-subtree, git-subhistory does NOT "need to
 [be run] from the toplevel of the working tree", you can run it wherever
