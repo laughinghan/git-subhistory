@@ -189,6 +189,9 @@ to fork git-subtree, intending to add an alternative way to merge,
 until I discovered that `git-subtree split` was now more complicated
 than `git filter-branch --subdirectory-filter`.
 
+Basically, `git-subtree merge` works in such a way that the resulting
+merged tree is good, but doesn't do the right thing to the commit graph.
+
 If you went through the example above with equivalent git-subtree
 commands, the history after splitting would be identical (right down to
 the hashes--the complication is only when you've `git-subtree merge`-ed
