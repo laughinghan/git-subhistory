@@ -15,15 +15,18 @@ other git tools know or care that "path/to/sub/" contains a subproject.
 WAIT, HOW DOES THIS WORK?
 
 Well, you know how you can `git log "path/to/sub/"` to see the history
-of just stuff in "path/to/sub/"? `git-subhistory split` is like that but
-creates a whole new commit history of just that stuff, rooted inside
-"path/to/sub/". This new commit history of just "Sub" can be pushed to
-its own repo and developed independently, or included in other projects.
+of just stuff in "path/to/sub/"? `git-subhistory split` (and
+`git-subtree split`) is like that but creates a whole new commit history
+of just that stuff, rooted inside "path/to/sub/". This new commit
+history of just "Sub" can be pushed to its own repo and developed
+independently, or included in other projects.
 
 Say that happens and commits are made on top of that new commit history.
 Then `git-subhistory merge` merges those changes back into "Main's"
 commit history by inverting `split`, creating new commits making those
-same changes on top of the original "Main" commits.
+same changes on top of the original "Main" commits, then merging them.
+(Contrast `git-subtree merge`, which merges in such a way that the
+resulting tree is good, but messes up the commit graph.)
 
 EXAMPLE
 
@@ -188,9 +191,6 @@ splitting to deal with the broken merging. In fact, I started out trying
 to fork git-subtree, intending to add an alternative way to merge,
 until I discovered that `git-subtree split` was now more complicated
 than `git filter-branch --subdirectory-filter`.
-
-Basically, `git-subtree merge` works in such a way that the resulting
-merged tree is good, but doesn't do the right thing to the commit graph.
 
 If you went through the example above with equivalent git-subtree
 commands, the history after splitting would be identical (right down to
