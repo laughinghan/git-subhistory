@@ -28,7 +28,7 @@ assert () {
 }
 
 #########
-# Utils: commit_non_hash_info(), assert_is_subcommit_of(), rest_of_tree()
+# Utils: commit_non_hash_info(), assert_is_subcommit_of(), rest_of_tree(), add_and_commit()
 
 commit_non_hash_info () {
 	git log $1 --no-walk --pretty='format:%an%n%ae%n%ai%n%cn%n%ce%n%ci%n%B'
@@ -49,63 +49,67 @@ rest_of_tree () (
 	rm .git/index.tmp
 )
 
+add_and_commit () {
+  echo "$1" > $2
+  git add $2
+  git commit -m "$(test "$3" && echo "$3" || echo "Add $1")" -q
+}
+
 #######
 # Main
 
-say '0. setup empty git repo, empty folders'
+say '(empty git repo with empty subdirectory)'
 rm -rf test-repo
 git init test-repo $QUIET
 cd test-repo
-echo stuff-outside-Sub > stuff-outside-Sub
-git add stuff-outside-Sub
-git commit -m 'Add stuff outside Sub' $QUIET
-
 mkdir -p path/to/sub/
 
 say
-say '1. create and add foo in Sub, commit to Main'
-echo foo > path/to/sub/foo
-git add path/to/sub/foo
-git commit -m 'Add path/to/sub/foo' $QUIET
+say "Let's say we have history like so:"
+add_and_commit 'a Main thing' a-Main-thing
+add_and_commit 'a Sub thing' path/to/sub/a-Sub-thing
+add_and_commit 'another Sub thing' path/to/sub/another-Sub-thing
+add_and_commit 'another Main thing' another-Main-thing
+test $QUIET || git log --graph --oneline --decorate --stat
 
 say
-say '2. split out commit history of just Sub, rooted in path/to/sub/'
+say 'We can split out the commit history of just Sub in path/to/sub/:'
 ../git-subhistory.sh split path/to/sub/ -v $QUIET
-assert_is_subcommit_of SPLIT_HEAD master
+assert_is_subcommit_of SPLIT_HEAD master^
+assert_is_subcommit_of SPLIT_HEAD^ master^^
 
 say
-say '  (or with branch name)'
+say '(or with branch name)'
 ../git-subhistory.sh split path/to/sub/ -b subproj -v $QUIET
-assert_is_subcommit_of subproj master
+test $QUIET || git log --graph --oneline --decorate --stat --all
+assert_is_subcommit_of subproj master^
+assert_is_subcommit_of subproj^ master^^
 # TODO: make sure SPLIT_HEAD is not a symref to subproj
 
 say
-say '  (also try split from not toplevel of repo)'
+say '(also try split from not toplevel of repo)'
 cd path/to/sub/
 ../../../../git-subhistory.sh split . -v $QUIET
-assert_is_subcommit_of SPLIT_HEAD master
+assert_is_subcommit_of SPLIT_HEAD master^
+assert_is_subcommit_of SPLIT_HEAD^ master^^
 cd ../../../
 
 say
-say '3. create, add, and commit bar to Sub'
-git checkout subproj -b add-bar $QUIET
-echo bar > bar
-git add bar
-git commit -m 'Add bar' $QUIET
+say "Say we pull in upstream bugfixes:"
+git checkout subproj
+add_and_commit 'fix Sub somehow' fix-Sub-somehow 'Fix Sub somehow'
+add_and_commit 'fix Sub further' fix-Sub-further 'Fix Sub further'
+git checkout -
+test $QUIET || git log --graph --oneline --decorate --stat subproj
 
 say
-say '  (also a commit whose parent was not split from Main)'
-echo another-commit-to-rewrite > another-commit-to-rewrite
-git add another-commit-to-rewrite
-git commit -m 'Add another commit to rewrite' $QUIET
-
-say
-say '4. merge in "upstream" commits to Sub'
-git checkout master -b merge-bar $QUIET
-../git-subhistory.sh merge path/to/sub/ add-bar -v $QUIET
-assert_is_subcommit_of add-bar merge-bar
-assert "rest of tree on merge-bar is the same as master" \
-	$(rest_of_tree merge-bar) = $(rest_of_tree master)
+say 'Assimilate these changes back into Main:'
+../git-subhistory.sh assimilate path/to/sub/ subproj -v $QUIET
+test $QUIET || git log --graph --oneline --decorate --stat
+assert_is_subcommit_of subproj ASSIMILATE_HEAD
+assert_is_subcommit_of subproj^ ASSIMILATE_HEAD^
+assert "rest of tree on subproj is the same as before on master" \
+	$(rest_of_tree ASSIMILATE_HEAD) = $(rest_of_tree master^)
 
 ###############
 # Test Summary
