@@ -45,7 +45,7 @@ Let's say we have history like so:
 
 We can split out the commit history of just Sub in path/to/sub/:
 
-  $ ../git-subhistory.sh split path/to/sub/ -B subproj
+  $ ../git-subhistory.sh split path/to/sub/ -b subproj
   Rewrite 6285d3c68b3eb5f0cd2cb8c376c0d83a0f2b7c0a (2/2)
   Ref 'refs/heads/subproj' was rewritten
 
