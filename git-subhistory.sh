@@ -135,14 +135,14 @@ subhistory_split () {
 	)"
 }
 
-subhistory_merge () {
+subhistory_assimilate () {
 	# args
-	test $# = 1 || usage "wrong number of arguments to 'merge'"
-	merge_from="$1"
-	git update-ref SUBHISTORY_MERGE_HEAD "$merge_from" || exit $?
+	test $# = 1 || usage "wrong number of arguments to '$subcommand'"
+	assimilatee="$1"
+	git update-ref ASSIMILATE_HEAD "$assimilatee" || exit $?
 
-	elaborate "'merge' path_to_sub='$path_to_sub' merge_from='$merge_from'" \
-		"SUBHISTORY_MERGE_HEAD='$(git rev-parse SUBHISTORY_MERGE_HEAD)'"
+	elaborate "'assimilate' path_to_sub='$path_to_sub' assimilatee='$assimilatee'" \
+		"ASSIMILATE_HEAD='$(git rev-parse ASSIMILATE_HEAD)'"
 
 	# split HEAD
 	mkdir "$tmp_dir/split-to-orig-map" || exit $?
@@ -203,11 +203,20 @@ subhistory_merge () {
 		--original subhistory-tmp/filter-branch-backup \
 		--parent-filter "$parent_filter" \
 		--index-filter "$index_filter"  \
-		-- SPLIT_HEAD..SUBHISTORY_MERGE_HEAD \
+		-- SPLIT_HEAD..ASSIMILATE_HEAD \
 	2>&1 | say_stdin || exit $?
 
 	say
-	git merge SUBHISTORY_MERGE_HEAD --edit -m "$(
+	say "Assimilated $assimilatee into $(
+		git symbolic-ref --short HEAD -q \
+		|| echo "detached HEAD ($(git rev-parse --short HEAD))"
+	) under $path_to_sub as ASSIMILATE_HEAD"
+}
+
+subhistory_merge () {
+	subhistory_assimilate "$@" &&
+	say &&
+	git merge ASSIMILATE_HEAD --edit -m "$(
 		echo "$(merge_name "$merge_from" | git fmt-merge-msg \
 			| sed 's/^Merge /Merge subhistory /') under $path_to_sub"
 	)" \
@@ -263,7 +272,7 @@ subcommand="$1"
 shift
 
 case "$subcommand" in
-	split|merge) ;;
+	split|assimilate|merge) ;;
 	*) usage "unknown subcommand '$subcommand'" ;;
 esac
 
