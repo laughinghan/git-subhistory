@@ -90,6 +90,15 @@ usage () {
 	exec "$0" -h
 }
 
+# TODO: find a better place to put this
+# Get "path/to/sub/" (relative to toplevel) from <subproj-path> (relative to
+# original current working directory).
+# Bonus: assimilate needs .'s and //'s normalized away, trailing / guaranteed
+get_path_to_sub () {
+	test "$1" || usage "first arg <subproj-path> is required (just . is allowed)"
+	path_to_sub="$(cd "./$GIT_PREFIX/$1" && git rev-parse --show-prefix)" || exit $?
+}
+
 ##############
 # Subcommands
 
@@ -97,7 +106,8 @@ usage () {
 commit_filter='git commit-tree "$@"' # default/noop
 
 subhistory_split () {
-	test $# = 0 || usage "wrong number of arguments to 'split'"
+	test $# = 1 || usage "wrong number of arguments to 'split'"
+	get_path_to_sub "$1"
 
 	elaborate "'split' path_to_sub='$path_to_sub' newbranch='$newbranch'" \
 		"force_newbranch='$force_newbranch'"
@@ -137,8 +147,9 @@ subhistory_split () {
 
 subhistory_assimilate () {
 	# args
-	test $# = 1 || usage "wrong number of arguments to '$subcommand'"
-	assimilatee="$1"
+	test $# = 2 || usage "wrong number of arguments to '$subcommand'"
+	get_path_to_sub "$1" # FIXME requires path/to/sub/ to already exist :(
+	assimilatee="$2"
 	git update-ref ASSIMILATE_HEAD "$assimilatee" || exit $?
 
 	elaborate "'assimilate' path_to_sub='$path_to_sub' assimilatee='$assimilatee'" \
@@ -274,11 +285,8 @@ esac
 
 # All subcommands need:
 
-# "path/to/sub/" (relative to toplevel) from <subproj-path> (relative to current
-# working directory); bonus: normalize away .'s and //'s, guarantee trailing /
-test "$1" || usage "first arg <subproj-path> is required"
-path_to_sub="$(cd "$1" && git rev-parse --show-prefix)" || exit $?
-shift
+# the original current working directory prefix (named like for git aliases)
+GIT_PREFIX="$(git rev-parse --show-prefix)"
 
 # to be at toplevel (for filter-branch); need ./ in case of empty string
 cd ./$(git rev-parse --show-cdup) || exit $?
