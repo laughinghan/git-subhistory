@@ -289,14 +289,7 @@ cd ./$(git rev-parse --show-cdup) || exit $?
 
 # a temporary directory for e.g. filter-branch backups
 tmp_dir="$(git rev-parse --git-dir)/subhistory-tmp"
-mkdir "$tmp_dir" || {
-	test -d "$tmp_dir" && die "the temporary directory '$tmp_dir' already exists
-If git-subhistory is running in parallel in another process, uh, don't do that.
-If a previous invocation of git-subhistory exited abruptly and failed to clean
-up after itself, just rm -rf '$tmp_dir' and try again." \
-	|| die "couldn't create the temporary directory '$tmp_dir'"
-}
+mkdir "$tmp_dir" || exit $?
+trap "rm -rf '$tmp_dir'" EXIT
 
 "subhistory_$subcommand" "$@"
-
-rm -rf "$tmp_dir"
