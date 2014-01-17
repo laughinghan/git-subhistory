@@ -58,14 +58,15 @@ add_and_commit () {
 #######
 # Main
 
-say '(empty git repo with empty subdirectory)'
+say '# (empty git repo with empty subdirectory)'
 rm -rf test-repo
 git init test-repo $QUIET
 cd test-repo
 mkdir -p path/to/sub/
 
 say
-say "Let's say we have history like so:"
+say '###'
+say "# Let's say we have history like so:"
 add_and_commit 'a Main thing' a-Main-thing
 add_and_commit 'a Sub thing' path/to/sub/a-Sub-thing
 add_and_commit 'another Sub thing' path/to/sub/another-Sub-thing
@@ -73,13 +74,14 @@ add_and_commit 'another Main thing' another-Main-thing
 test $QUIET || git log --graph --oneline --decorate --stat
 
 say
-say 'We can split out the commit history of just Sub in path/to/sub/:'
+say '###'
+say '# We can split out the commit history of just Sub in path/to/sub/:'
 ../git-subhistory.sh split path/to/sub/ -v $QUIET
 assert_is_subcommit_of SPLIT_HEAD master^
 assert_is_subcommit_of SPLIT_HEAD^ master^^
 
 say
-say '(or with branch name)'
+say '# (or with a branch name)'
 ../git-subhistory.sh split path/to/sub/ -b subproj -v $QUIET
 test $QUIET || git log --graph --oneline --decorate --stat --all
 assert_is_subcommit_of subproj master^
@@ -87,7 +89,7 @@ assert_is_subcommit_of subproj^ master^^
 # TODO: make sure SPLIT_HEAD is not a symref to subproj
 
 say
-say '(also try split from not toplevel of repo)'
+say '# (also try split from not toplevel of repo)'
 cd path/to/sub/
 ../../../../git-subhistory.sh split . -v $QUIET
 assert_is_subcommit_of SPLIT_HEAD master^
@@ -95,7 +97,8 @@ assert_is_subcommit_of SPLIT_HEAD^ master^^
 cd ../../../
 
 say
-say "Say we pull in upstream bugfixes:"
+say '###'
+say "# Now say we pull in upstream bugfixes:"
 git checkout subproj -q
 add_and_commit 'fix Sub somehow' fix-Sub-somehow 'Fix Sub somehow'
 add_and_commit 'fix Sub further' fix-Sub-further 'Fix Sub further'
@@ -103,7 +106,8 @@ git checkout - -q
 test $QUIET || git log --graph --oneline --decorate --stat subproj
 
 say
-say 'Assimilate these changes back into Main:'
+say '###'
+say '# Finally, we can assimilate these changes back into Main:'
 ../git-subhistory.sh assimilate path/to/sub/ subproj -v $QUIET
 test $QUIET || git log --graph --oneline --decorate --stat
 assert_is_subcommit_of subproj ASSIMILATE_HEAD
@@ -112,7 +116,8 @@ assert "rest of tree on subproj is the same as before on master" \
 	$(rest_of_tree ASSIMILATE_HEAD) = $(rest_of_tree master^)
 
 say
-say 'Now try assimilating in a new subproject that had never been split:'
+say '###'
+say '# Also try assimilating in a new subproject that had never been split:'
 git checkout --orphan new-subproj -q
 git reset --hard
 add_and_commit 'a NewSub thing' a-NewSub-thing
