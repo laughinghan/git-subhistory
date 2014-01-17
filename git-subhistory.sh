@@ -213,6 +213,7 @@ subhistory_assimilate () {
 
 		revs_to_rewrite=SPLIT_HEAD..ASSIMILATE_HEAD
 	else
+		parent_filter=
 		index_filter='
 			git read-tree --empty &&
 			git read-tree --prefix='"'$path_to_sub'"' $GIT_COMMIT'
