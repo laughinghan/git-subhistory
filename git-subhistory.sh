@@ -145,11 +145,10 @@ subhistory_assimilate () {
 		"ASSIMILATE_HEAD='$(git rev-parse ASSIMILATE_HEAD)'"
 
 	# split HEAD
-	mkdir "$tmp_dir/split-to-orig-map" || exit $?
+	mkdir "$GIT_DIR/subhistory-tmp/split-to-orig-map" || exit $?
 	commit_filter='
 		rewritten=$(git commit-tree "$@") &&
-		tmp_dir="$(git rev-parse --git-dir)/subhistory-tmp" &&
-		echo $GIT_COMMIT > "$tmp_dir/split-to-orig-map/$rewritten" &&
+		echo $GIT_COMMIT > "$GIT_DIR/subhistory-tmp/split-to-orig-map/$rewritten" &&
 		echo $rewritten'
 	subhistory_split || exit $?
 	say # blank line after summary of subhistory_split
@@ -158,12 +157,11 @@ subhistory_assimilate () {
 	# filtering for parents that were splits and swapping them out for their
 	# originals
 	parent_filter='
-		tmp_dir="$(git rev-parse --git-dir)/subhistory-tmp" &&
 		set -- $(cat) &&
 		for parent
 		do
 			test $parent != -p \
-			&& cat "$tmp_dir/split-to-orig-map/$parent" 2>/dev/null \
+			&& cat "$GIT_DIR/subhistory-tmp/split-to-orig-map/$parent" 2>/dev/null \
 			|| echo $parent
 		done'
 
@@ -186,13 +184,13 @@ subhistory_assimilate () {
 	#     parent. This is actually why merge explicitly doesn't invert splitting
 	#     of all commits, it only inverts splitting of ancestors of HEAD.
 	index_filter='
-		tmp_dir="$(git rev-parse --git-dir)/subhistory-tmp" &&
 		if git rev-parse --verify -q $GIT_COMMIT^2 # if $GIT_COMMIT is a merge
 		then
 			Main_tree=HEAD # TODO: find earliest merged tree
 		else
 			parent=$(git rev-parse $GIT_COMMIT^) &&
-			Main_tree=$(cat "$tmp_dir/split-to-orig-map/$parent" 2>/dev/null \
+			Main_tree=$(
+				cat "$GIT_DIR/subhistory-tmp/split-to-orig-map/$parent" 2>/dev/null \
 				|| map $parent)
 		fi &&
 		git read-tree $Main_tree &&
@@ -228,8 +226,7 @@ subhistory_merge () {
 # a git utility but isn't, and had to be copied from the git source code.
 
 # As part of generating merge commit messages, belongs in fmt-merge-msg, but
-# had to be copied from contrib/examples/git-merge.sh (latest master branch).
-# Only modification: doesn't expect global var $GIT_DIR.
+# had to be copied from contrib/examples/git-merge.sh (latest master branch):
 # https://github.com/git/git/blob/932f7e47699993de0f6ad2af92be613994e40afe/contrib/examples/git-merge.sh#L140-L171
 merge_name () {
 	remote="$1"
@@ -255,7 +252,6 @@ merge_name () {
 			return
 		fi
 	fi
-	GIT_DIR="$(git rev-parse --git-dir)"
 	if test "$remote" = "FETCH_HEAD" -a -r "$GIT_DIR/FETCH_HEAD"
 	then
 		sed -e 's/	not-for-merge	/		/' -e 1q \
@@ -287,9 +283,11 @@ shift
 # to be at toplevel (for filter-branch); need ./ in case of empty string
 cd ./$(git rev-parse --show-cdup) || exit $?
 
+# the path to the .git directory (or directory to use as such)
+GIT_DIR="$(git rev-parse --git-dir)"
+
 # a temporary directory for e.g. filter-branch backups
-tmp_dir="$(git rev-parse --git-dir)/subhistory-tmp"
-mkdir "$tmp_dir" || exit $?
-trap "rm -rf '$tmp_dir'" EXIT
+mkdir "$GIT_DIR/subhistory-tmp/" || exit $?
+trap "rm -rf '$GIT_DIR/subhistory-tmp/'" EXIT
 
 "subhistory_$subcommand" "$@"
