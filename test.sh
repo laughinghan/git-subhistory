@@ -96,10 +96,10 @@ cd ../../../
 
 say
 say "Say we pull in upstream bugfixes:"
-git checkout subproj $QUIET
+git checkout subproj -q
 add_and_commit 'fix Sub somehow' fix-Sub-somehow 'Fix Sub somehow'
 add_and_commit 'fix Sub further' fix-Sub-further 'Fix Sub further'
-git checkout - $QUIET
+git checkout - -q
 test $QUIET || git log --graph --oneline --decorate --stat subproj
 
 say
@@ -113,11 +113,11 @@ assert "rest of tree on subproj is the same as before on master" \
 
 say
 say 'Now try assimilating in a new subproject that had never been split:'
-git checkout --orphan new-subproj $QUIET
+git checkout --orphan new-subproj -q
 git reset --hard
 add_and_commit 'a NewSub thing' a-NewSub-thing
 add_and_commit 'another NewSub thing' another-NewSub-thing
-git checkout - $QUIET
+git checkout - -q
 mkdir -p path/to/new-sub/
 ../git-subhistory.sh assimilate path/to/new-sub/ new-subproj -v $QUIET
 assert_is_subcommit_of new-subproj ASSIMILATE_HEAD path/to/new-sub/
