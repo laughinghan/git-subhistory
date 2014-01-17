@@ -50,9 +50,9 @@ rest_of_tree () (
 )
 
 add_and_commit () {
-  echo "$1" > $2
-  git add $2
-  git commit -m "$(test "$3" && echo "$3" || echo "Add $1")" -q
+	echo "$1" > $2
+	git add $2
+	git commit -m "$(test "$3" && echo "$3" || echo "Add $1")" -q
 }
 
 #######
