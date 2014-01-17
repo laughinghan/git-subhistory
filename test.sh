@@ -36,7 +36,7 @@ commit_non_hash_info () {
 
 assert_is_subcommit_of () {
 	assert "tree of $1 matches subtree of $2" \
-		$(git rev-parse $1:) = $(git rev-parse $2:path/to/sub/)
+		$(git rev-parse $1:) = $(git rev-parse $2:$(test $3 && echo $3 || echo path/to/sub/))
 	assert "$1 commit other info matches $2" \
 	"$(commit_non_hash_info $1)" = "$(commit_non_hash_info $2)"
 }
@@ -110,6 +110,19 @@ assert_is_subcommit_of subproj ASSIMILATE_HEAD
 assert_is_subcommit_of subproj^ ASSIMILATE_HEAD^
 assert "rest of tree on subproj is the same as before on master" \
 	$(rest_of_tree ASSIMILATE_HEAD) = $(rest_of_tree master^)
+
+say
+say 'Now try assimilating in a new subproject that had never been split:'
+git checkout --orphan new-subproj $QUIET
+git reset --hard
+add_and_commit 'a NewSub thing' a-NewSub-thing
+add_and_commit 'another NewSub thing' another-NewSub-thing
+git checkout - $QUIET
+mkdir -p path/to/new-sub/
+../git-subhistory.sh assimilate path/to/new-sub/ new-subproj -v $QUIET
+assert_is_subcommit_of new-subproj ASSIMILATE_HEAD path/to/new-sub/
+assert_is_subcommit_of new-subproj^ ASSIMILATE_HEAD^ path/to/new-sub/
+
 
 ###############
 # Test Summary

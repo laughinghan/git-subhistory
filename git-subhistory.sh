@@ -155,64 +155,76 @@ subhistory_assimilate () {
 	elaborate "'assimilate' path_to_sub='$path_to_sub' assimilatee='$assimilatee'" \
 		"ASSIMILATE_HEAD='$(git rev-parse ASSIMILATE_HEAD)'"
 
-	# split HEAD
-	mkdir "$GIT_DIR/subhistory-tmp/split-to-orig-map" || exit $?
-	commit_filter='
-		rewritten=$(git commit-tree "$@") &&
-		echo $GIT_COMMIT > "$GIT_DIR/subhistory-tmp/split-to-orig-map/$rewritten" &&
-		echo $rewritten'
-	subhistory_split || exit $?
-	say # blank line after summary of subhistory_split
+	# test if "path/to/sub/" has git history yet
+	if test "$(git ls-tree --name-only HEAD "${path_to_sub%/}")"
+	then
+		# split HEAD
+		mkdir "$GIT_DIR/subhistory-tmp/split-to-orig-map" || exit $?
+		commit_filter='
+			rewritten=$(git commit-tree "$@") &&
+			echo $GIT_COMMIT > "$GIT_DIR/subhistory-tmp/split-to-orig-map/$rewritten" &&
+			echo $rewritten'
+		subhistory_split "$1" || exit $?
+		say # blank line after summary of subhistory_split
 
-	# build the synthetic commits on top of the original Main commits, by
-	# filtering for parents that were splits and swapping them out for their
-	# originals
-	parent_filter='
-		set -- $(cat) &&
-		for parent
-		do
-			test $parent != -p \
-			&& cat "$GIT_DIR/subhistory-tmp/split-to-orig-map/$parent" 2>/dev/null \
-			|| echo $parent
-		done'
+		# build the synthetic commits on top of the original Main commits, by
+		# filtering for parents that were splits and swapping them out for their
+		# originals
+		parent_filter='
+			set -- $(cat) &&
+			for parent
+			do
+				test $parent != -p \
+				&& cat "$GIT_DIR/subhistory-tmp/split-to-orig-map/$parent" 2>/dev/null \
+				|| echo $parent
+			done'
 
-	# write synthetic commits that make the same changes as the Sub commits but
-	# to the subtree of Main, by rewriting each Sub commit as having the same tree
-	# as either the original Main commit the Sub commit's parent was split from or
-	# the new synthetic parent commit that's been rewritten as a Main commit, but
-	# with the subtree overwritten.
-	# - Complication: there can be >1 parent, with different Main trees. Luckily,
-	#   differences in Main trees could only possibly come from Main commits that
-	#   are ancestors of HEAD [Footnote], which must have been merged at some
-	#   point in the history of HEAD, since HEAD itself is a single commit.
-	#   Finding the earliest such merge that won't conflict with HEAD is
-	#   nontrivial, since the same two commits could be merged in any number of
-	#   commits with any tree at all. Leave finding the earliest merged tree as
-	#   TODO, for now just use HEAD, which is guaranteed not to merge conflict
-	#   with itself.
-	#   + [Footnote]: others weren't split into ancestors of SPLIT_HEAD, and hence
-	#     aren't in the split-to-orig-map, and thus couldn't be a rewritten
-	#     parent. This is actually why merge explicitly doesn't invert splitting
-	#     of all commits, it only inverts splitting of ancestors of HEAD.
-	index_filter='
-		if git rev-parse --verify -q $GIT_COMMIT^2 # if $GIT_COMMIT is a merge
-		then
-			Main_tree=HEAD # TODO: find earliest merged tree
-		else
-			parent=$(git rev-parse $GIT_COMMIT^) &&
-			Main_tree=$(
-				cat "$GIT_DIR/subhistory-tmp/split-to-orig-map/$parent" 2>/dev/null \
-				|| map $parent)
-		fi &&
-		git read-tree $Main_tree &&
-		git rm --cached -r '"'$path_to_sub'"' -q &&
-		git read-tree --prefix='"'$path_to_sub'"' $GIT_COMMIT'
+		# write synthetic commits that make the same changes as the Sub commits but
+		# to the subtree of Main, by rewriting each Sub commit as having the same tree
+		# as either the original Main commit the Sub commit's parent was split from or
+		# the new synthetic parent commit that's been rewritten as a Main commit, but
+		# with the subtree overwritten.
+		# - Complication: there can be >1 parent, with different Main trees. Luckily,
+		#   differences in Main trees could only possibly come from Main commits that
+		#   are ancestors of HEAD [Footnote], which must have been merged at some
+		#   point in the history of HEAD, since HEAD itself is a single commit.
+		#   Finding the earliest such merge that won't conflict with HEAD is
+		#   nontrivial, since the same two commits could be merged in any number of
+		#   commits with any tree at all. Leave finding the earliest merged tree as
+		#   TODO, for now just use HEAD, which is guaranteed not to merge conflict
+		#   with itself.
+		#   + [Footnote]: others weren't split into ancestors of SPLIT_HEAD, and hence
+		#     aren't in the split-to-orig-map, and thus couldn't be a rewritten
+		#     parent. This is actually why merge explicitly doesn't invert splitting
+		#     of all commits, it only inverts splitting of ancestors of HEAD.
+		index_filter='
+			if git rev-parse --verify -q $GIT_COMMIT^2 # if $GIT_COMMIT is a merge
+			then
+				Main_tree=HEAD # TODO: find earliest merged tree
+			else
+				parent=$(git rev-parse $GIT_COMMIT^) &&
+				Main_tree=$(
+					cat "$GIT_DIR/subhistory-tmp/split-to-orig-map/$parent" 2>/dev/null \
+					|| map $parent)
+			fi &&
+			git read-tree $Main_tree &&
+			git rm --cached -r '"'$path_to_sub'"' -q &&
+			git read-tree --prefix='"'$path_to_sub'"' $GIT_COMMIT'
+
+		revs_to_rewrite=SPLIT_HEAD..ASSIMILATE_HEAD
+	else
+		index_filter='
+			git read-tree --empty &&
+			git read-tree --prefix='"'$path_to_sub'"' $GIT_COMMIT'
+
+		revs_to_rewrite=ASSIMILATE_HEAD
+	fi
 
 	git filter-branch \
 		--original subhistory-tmp/filter-branch-backup \
 		--parent-filter "$parent_filter" \
 		--index-filter "$index_filter"  \
-		-- SPLIT_HEAD..ASSIMILATE_HEAD \
+		-- $revs_to_rewrite \
 	2>&1 | say_stdin || exit $?
 
 	say
@@ -223,6 +235,7 @@ subhistory_assimilate () {
 }
 
 subhistory_merge () {
+	mkdir -p "./$GIT_PREFIX/$1" &&
 	subhistory_assimilate "$@" &&
 	say &&
 	git merge ASSIMILATE_HEAD --edit -m "$(
