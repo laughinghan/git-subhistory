@@ -96,10 +96,10 @@ cd ../../../
 
 say
 say "Say we pull in upstream bugfixes:"
-git checkout subproj
+git checkout subproj $QUIET
 add_and_commit 'fix Sub somehow' fix-Sub-somehow 'Fix Sub somehow'
 add_and_commit 'fix Sub further' fix-Sub-further 'Fix Sub further'
-git checkout -
+git checkout - $QUIET
 test $QUIET || git log --graph --oneline --decorate --stat subproj
 
 say
