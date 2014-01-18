@@ -171,8 +171,7 @@ subhistory_assimilate () {
 		# filtering for parents that were splits and swapping them out for their
 		# originals
 		parent_filter='
-			set -- $(cat) &&
-			for parent
+			for parent in $(cat)
 			do
 				test $parent != -p \
 				&& cat "$GIT_DIR/subhistory-tmp/split-to-orig-map/$parent" 2>/dev/null \
