@@ -168,6 +168,7 @@ add_and_commit 'yet more Sub fixes' yet-more-Sub-fixes
 git checkout - -q
 add_and_commit 'yet another Main thing' yet-another-Main-thing
 add_and_commit 'yet another Sub thing' path/to/sub/yet-another-Sub-thing
+add_and_commit 'a Main thing after split diverges' a-Main-thing-after-split-diverges
 ../git-subhistory.sh split path/to/sub/ -B subproj -v $QUIET
 git checkout subproj -q
 add_and_commit 'yet more different Sub fixes' yet-more-different-Sub-fixes
@@ -176,8 +177,8 @@ git checkout - -q
 
 ../git-subhistory.sh assimilate path/to/sub/ subproj -v $QUIET
 assert_is_subcommit_of subproj ASSIMILATE_HEAD
-assert "rest of assimilated tree is the same as when diverged from master" \
-	$(rest_of_tree ASSIMILATE_HEAD) = $(rest_of_tree master)
+assert "rest of assimilated tree is the same as HEAD" \
+	$(rest_of_tree ASSIMILATE_HEAD) = $(rest_of_tree HEAD)
 
 git merge ASSIMILATE_HEAD --ff-only $QUIET
 assert "successful merge" $? = 0
