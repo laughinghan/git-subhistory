@@ -214,7 +214,7 @@ subhistory_assimilate () {
 					if test -z $parent_Main_tree
 					then
 						parent_Main_tree=$(git write-tree)
-					elif $(git write-tree) != $parent_Main_tree
+					elif test $(git write-tree) != $parent_Main_tree
 					then
 						git read-tree HEAD && # TODO: find earliest merged tree
 						git rm --cached -r '"'$path_to_sub'"' -q &&

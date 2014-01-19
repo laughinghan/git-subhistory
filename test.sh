@@ -160,6 +160,31 @@ assert "successful merge" $? = 0
 assert "rest of merged tree is the same as before" \
 	$(rest_of_tree master) = $(rest_of_tree master^)
 
+say
+say '###'
+say '# Assimilated merge commits with different Main trees, use HEAD'
+git checkout -b yet-more-subproj subproj -q
+add_and_commit 'yet more Sub fixes' yet-more-Sub-fixes
+git checkout - -q
+add_and_commit 'yet another Main thing' yet-another-Main-thing
+add_and_commit 'yet another Sub thing' path/to/sub/yet-another-Sub-thing
+../git-subhistory.sh split path/to/sub/ -B subproj -v $QUIET
+git checkout subproj -q
+add_and_commit 'yet more different Sub fixes' yet-more-different-Sub-fixes
+git merge yet-more-subproj -m "Merge branch 'yet-more-subproj' into subproj" $QUIET
+git checkout - -q
+
+../git-subhistory.sh assimilate path/to/sub/ subproj -v $QUIET
+assert_is_subcommit_of subproj ASSIMILATE_HEAD
+assert "rest of assimilated tree is the same as when diverged from master" \
+	$(rest_of_tree ASSIMILATE_HEAD) = $(rest_of_tree master)
+
+git merge ASSIMILATE_HEAD --ff-only $QUIET
+assert "successful merge" $? = 0
+assert "rest of merged tree is the same as before" \
+	$(rest_of_tree master) = $(rest_of_tree master@{1})
+
+
 
 ###############
 # Test Summary
