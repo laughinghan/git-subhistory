@@ -128,6 +128,22 @@ mkdir -p path/to/new-sub/
 assert_is_subcommit_of new-subproj ASSIMILATE_HEAD path/to/new-sub/
 assert_is_subcommit_of new-subproj^ ASSIMILATE_HEAD^ path/to/new-sub/
 
+say
+say '###'
+say "# Assimilated merge commits with the same Main tree, keep it"
+git checkout subproj -q
+git branch other-subproj
+add_and_commit 'extend Sub somehow' extend-Sub-somehow 'Extend Sub somehow'
+git checkout other-subproj -q
+add_and_commit 'extend Sub some-other-how' extend-Sub-some-other-how 'Extend Sub some-other-how'
+git checkout subproj -q
+git merge other-subproj -m "Merge branch 'other-subproj' into subproj" -q
+git checkout master -q
+../git-subhistory.sh assimilate path/to/sub/ subproj -v $QUIET
+assert_is_subcommit_of subproj ASSIMILATE_HEAD
+assert "rest of assimilated tree is the same as when diverged from master" \
+	$(rest_of_tree ASSIMILATE_HEAD) = $(rest_of_tree master^)
+
 
 ###############
 # Test Summary

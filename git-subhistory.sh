@@ -185,29 +185,49 @@ subhistory_assimilate () {
 		# with the subtree overwritten.
 		# - Complication: there can be >1 parent, with different Main trees. Luckily,
 		#   differences in Main trees could only possibly come from Main commits that
-		#   are ancestors of HEAD [Footnote], which must have been merged at some
-		#   point in the history of HEAD, since HEAD itself is a single commit.
-		#   Finding the earliest such merge that won't conflict with HEAD is
-		#   nontrivial, since the same two commits could be merged in any number of
-		#   commits with any tree at all. Leave finding the earliest merged tree as
-		#   TODO, for now just use HEAD, which is guaranteed not to merge conflict
-		#   with itself.
-		#   + [Footnote]: others weren't split into ancestors of SPLIT_HEAD, and hence
+		#   are ancestors of HEAD [FN1], which must have been merged at some point in
+		#   the history of HEAD, since HEAD itself is a single commit. Finding the
+		#   earliest such merge that won't conflict with HEAD is nontrivial, since the
+		#   same two commits could be merged in any number of commits with any tree at
+		#   all. Leave finding the earliest merged tree as TODO, for now if all parent
+		#   Main trees are the same use that [FN2], otherwise just use HEAD, which is
+		#   guaranteed not to merge conflict with itself.
+		#   + [FN1]: others weren't split into ancestors of SPLIT_HEAD, and hence
 		#     aren't in the split-to-orig-map, and thus couldn't be a rewritten
 		#     parent. This is actually why merge explicitly doesn't invert splitting
 		#     of all commits, it only inverts splitting of ancestors of HEAD.
+		#   + [FN2]: augh, this takes more than a dozen lines: looping over each
+		#     parent, read the tree for the (rewritten) parent into the index, delete
+		#     "path/to/sub/" from the index, and then if this is the first parent,
+		#     set a variable to the hash of the index, else check that the hash of
+		#     the index matches the stored hash (bail out defaulting to HEAD if not).
 		index_filter='
-			if git rev-parse --verify -q $GIT_COMMIT^2 # if $GIT_COMMIT is a merge
+			if git rev-parse --verify -q $GIT_COMMIT^2 >/dev/null # if this is a merge
 			then
-				Main_tree=HEAD # TODO: find earliest merged tree
+				for parent in $(git rev-list --no-walk --parents $GIT_COMMIT \
+					| cut -f 2- -d " ") # first word is just $GIT_COMMIT
+				do
+					git read-tree $(
+						cat "$GIT_DIR/subhistory-tmp/split-to-orig-map/$parent" 2>/dev/null \
+						|| map $parent) &&
+					git rm --cached -r '"'$path_to_sub'"' -q &&
+					if test -z $parent_Main_tree
+					then
+						parent_Main_tree=$(git write-tree)
+					elif $(git write-tree) != $parent_Main_tree
+					then
+						git read-tree HEAD && # TODO: find earliest merged tree
+						git rm --cached -r '"'$path_to_sub'"' -q &&
+						break
+					fi
+				done
 			else
 				parent=$(git rev-parse $GIT_COMMIT^) &&
-				Main_tree=$(
+				git read-tree $(
 					cat "$GIT_DIR/subhistory-tmp/split-to-orig-map/$parent" 2>/dev/null \
 					|| map $parent)
+				git rm --cached -r '"'$path_to_sub'"' -q
 			fi &&
-			git read-tree $Main_tree &&
-			git rm --cached -r '"'$path_to_sub'"' -q &&
 			git read-tree --prefix='"'$path_to_sub'"' $GIT_COMMIT'
 
 		revs_to_rewrite=SPLIT_HEAD..ASSIMILATE_HEAD
