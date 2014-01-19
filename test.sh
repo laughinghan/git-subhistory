@@ -112,7 +112,7 @@ say '# Finally, we can assimilate these changes back into Main:'
 test $QUIET || git log --graph --oneline --decorate --stat
 assert_is_subcommit_of subproj ASSIMILATE_HEAD
 assert_is_subcommit_of subproj^ ASSIMILATE_HEAD^
-assert "rest of tree on subproj is the same as before on master" \
+assert "rest of assimilated tree is the same as when diverged from master" \
 	$(rest_of_tree ASSIMILATE_HEAD) = $(rest_of_tree master^)
 
 say
