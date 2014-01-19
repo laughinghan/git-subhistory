@@ -44,7 +44,7 @@ assert_is_subcommit_of () {
 rest_of_tree () (
 	export GIT_INDEX_FILE=.git/index.tmp
 	git read-tree $1
-	git rm --cached -r path/to/sub/ -q
+	git rm --cached -r $(test $2 && echo $2 || echo path/to/sub/) -q &>/dev/null
 	git write-tree
 	rm .git/index.tmp
 )
@@ -109,11 +109,17 @@ say
 say '###'
 say '# Finally, we can assimilate these changes back into Main:'
 ../git-subhistory.sh assimilate path/to/sub/ subproj -v $QUIET
-test $QUIET || git log --graph --oneline --decorate --stat
 assert_is_subcommit_of subproj ASSIMILATE_HEAD
 assert_is_subcommit_of subproj^ ASSIMILATE_HEAD^
 assert "rest of assimilated tree is the same as when diverged from master" \
 	$(rest_of_tree ASSIMILATE_HEAD) = $(rest_of_tree master^)
+
+git merge ASSIMILATE_HEAD -m "Merge subhistory branch 'subproj' under path/to/sub/" $QUIET
+assert "successful merge" $? = 0
+assert "rest of merged tree is the same as before" \
+	$(rest_of_tree master) = $(rest_of_tree master^)
+
+test $QUIET || git log --graph --oneline --decorate --stat
 
 say
 say '###'
@@ -122,11 +128,16 @@ git checkout --orphan new-subproj -q
 git reset --hard
 add_and_commit 'a NewSub thing' a-NewSub-thing
 add_and_commit 'another NewSub thing' another-NewSub-thing
-git checkout - -q
+git checkout master -q
 mkdir -p path/to/new-sub/
 ../git-subhistory.sh assimilate path/to/new-sub/ new-subproj -v $QUIET
 assert_is_subcommit_of new-subproj ASSIMILATE_HEAD path/to/new-sub/
 assert_is_subcommit_of new-subproj^ ASSIMILATE_HEAD^ path/to/new-sub/
+
+git merge ASSIMILATE_HEAD -m "Merge subhistory branch 'new-subproj' under path/to/new-sub/" $QUIET
+assert "successful merge" $? = 0
+assert "rest of merged tree is the same as before" \
+	$(rest_of_tree master path/to/new-sub/) = $(rest_of_tree master^ path/to/new-sub/)
 
 say
 say '###'
@@ -142,7 +153,12 @@ git checkout master -q
 ../git-subhistory.sh assimilate path/to/sub/ subproj -v $QUIET
 assert_is_subcommit_of subproj ASSIMILATE_HEAD
 assert "rest of assimilated tree is the same as when diverged from master" \
-	$(rest_of_tree ASSIMILATE_HEAD) = $(rest_of_tree master^)
+	$(rest_of_tree ASSIMILATE_HEAD) = $(rest_of_tree $(git merge-base ASSIMILATE_HEAD master^))
+
+git merge ASSIMILATE_HEAD -m "Merge subhistory branch 'subproj' under path/to/sub/" $QUIET
+assert "successful merge" $? = 0
+assert "rest of merged tree is the same as before" \
+	$(rest_of_tree master) = $(rest_of_tree master^)
 
 
 ###############
