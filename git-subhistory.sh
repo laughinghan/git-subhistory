@@ -195,7 +195,9 @@ subhistory_assimilate () {
 		#   + [FN1]: others weren't split into ancestors of SPLIT_HEAD, and hence
 		#     aren't in the split-to-orig-map, and thus couldn't be a rewritten
 		#     parent. This is actually why merge explicitly doesn't invert splitting
-		#     of all commits, it only inverts splitting of ancestors of HEAD.
+		#     of all commits, it only inverts splitting of ancestors of HEAD, at the
+		#     cost of the potentially surprising cherry-pick-like commits described
+		#     in the README.
 		#   + [FN2]: augh, this takes more than a dozen lines: looping over each
 		#     parent, read the tree for the (rewritten) parent into the index, delete
 		#     "path/to/sub/" from the index, and then if this is the first parent,

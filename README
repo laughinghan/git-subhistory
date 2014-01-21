@@ -168,6 +168,9 @@ git-subhistory assimilate <subproj-path> <subproj-branch>
    commits is prioritized, and git-subhistory merge will be made more
    sophisticated and will automatically resolve conflicts in the "Main"
    tree outside "path/to/sub/" in favor of HEAD.)
+  (Note: it is recommended to only split from/merge into the same Main
+   branch. TODO: explain why merging in commits split from another
+   branch can be like cherry-picking.)
 
 git-subhistory merge <subproj-path> <subproj-branch>
 
