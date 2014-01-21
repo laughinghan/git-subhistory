@@ -160,6 +160,14 @@ git-subhistory assimilate <subproj-path> <subproj-branch>
   synthetic commits were generated from, generates more synthetic
   commits that make the same change as the "Sub" commits but to
   "path/to/sub/" in "Main" instead.
+  (Note: synthetic merge commits are tricky, because the "Main" trees of
+   their parents may conflict. git-subhistory tries to create the
+   simplest synthetic merge commits, but currently prioritizes
+   guaranteeing that ASSIMILATE_HEAD be a clean merge into HEAD. This
+   may change: mayhaps in the future simplicity of synthetic merge
+   commits is prioritized, and git-subhistory merge will be made more
+   sophisticated and will automatically resolve conflicts in the "Main"
+   tree outside "path/to/sub/" in favor of HEAD.)
 
 git-subhistory merge <subproj-path> <subproj-branch>
 
