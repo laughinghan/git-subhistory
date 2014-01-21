@@ -162,17 +162,39 @@ assert "rest of merged tree is the same as before" \
 
 say
 say '###'
-say '# Assimilating merge commits with different Main trees, use HEAD'
-git checkout -b yet-more-subproj subproj -q
-add_and_commit 'yet more Sub fixes' yet-more-Sub-fixes
-git checkout - -q
+say '# Assimilating merge commits with Main trees with one common descendant, use descendant'
 add_and_commit 'yet another Main thing' yet-another-Main-thing
 add_and_commit 'yet another Sub thing' path/to/sub/yet-another-Sub-thing
 add_and_commit 'a Main thing after split diverges' a-Main-thing-after-split-diverges
+../git-subhistory.sh split path/to/sub/ -b yet-more-subproj -v $QUIET
+git checkout subproj -q
+git merge yet-more-subproj -m "Merge branch 'yet-more-subproj' into subproj" $QUIET
+add_and_commit 'yet more Sub fixes' yet-more-Sub-fixes
+git checkout - -q
+
+../git-subhistory.sh assimilate path/to/sub/ subproj -v $QUIET
+assert_is_subcommit_of subproj ASSIMILATE_HEAD
+assert "rest of assimilated tree is the same as when diverged from master" \
+	$(rest_of_tree ASSIMILATE_HEAD) = $(rest_of_tree master^)
+
+git merge ASSIMILATE_HEAD -m "Merge subhistory branch 'subproj' under path/to/sub/" $QUIET
+assert "successful merge" $? = 0
+assert "rest of merged tree is the same as before" \
+	$(rest_of_tree master) = $(rest_of_tree master@{1})
+
+say
+say '###'
+say '# Assimilating merge commits with independent Main trees, use HEAD'
+git checkout -b indep -q
+add_and_commit 'independent Main thing' independent-Main-thing
+add_and_commit 'Sub thing after independent Main thing' path/to/sub/Sub-thing-after-independent-Main-thing
+../git-subhistory.sh split path/to/sub/ -b subproj-indep -v $QUIET
+git checkout - -q
+add_and_commit 'master Main thing' master-Main-thing
+add_and_commit 'Sub thing after master Main thing' path/to/sub/Sub-thing-after-master-Main-thing
 ../git-subhistory.sh split path/to/sub/ -B subproj -v $QUIET
 git checkout subproj -q
-add_and_commit 'yet more different Sub fixes' yet-more-different-Sub-fixes
-git merge yet-more-subproj -m "Merge branch 'yet-more-subproj' into subproj" $QUIET
+git merge subproj-indep -m "Merge branch 'subproj-indep' into subproj" $QUIET
 git checkout - -q
 
 ../git-subhistory.sh assimilate path/to/sub/ subproj -v $QUIET

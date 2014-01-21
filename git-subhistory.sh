@@ -190,8 +190,8 @@ subhistory_assimilate () {
 		#   earliest such merge that won't conflict with HEAD is nontrivial, since the
 		#   same two commits could be merged in any number of commits with any tree at
 		#   all. Leave finding the earliest merged tree as TODO, for now if all parent
-		#   Main trees are the same use that [FN2], otherwise just use HEAD, which is
-		#   guaranteed not to merge conflict with itself.
+		#   Main trees are the same use that [FN2], otherwise just use the default
+		#   Main tree guaranteed not to merge conflict with HEAD [FN3].
 		#   + [FN1]: others weren't split into ancestors of SPLIT_HEAD, and hence
 		#     aren't in the split-to-orig-map, and thus couldn't be a rewritten
 		#     parent. This is actually why merge explicitly doesn't invert splitting
@@ -200,7 +200,28 @@ subhistory_assimilate () {
 		#     parent, read the tree for the (rewritten) parent into the index, delete
 		#     "path/to/sub/" from the index, and then if this is the first parent,
 		#     set a variable to the hash of the index, else check that the hash of
-		#     the index matches the stored hash (bail out defaulting to HEAD if not).
+		#     the index matches the stored hash (use default Main tree if not).
+		#   + [FN3]: if there's multiple merge bases between SPLIT_HEAD and
+		#     $assimilatee, just use HEAD (can't conflict with itself). However, if
+		#     there's a unique merge base between SPLIT_HEAD and $assimilatee, the
+		#     Main commit it was split from (as an ancestor of SPLIT_HEAD, musta' been
+		#     split from something) will be *the* merge base between HEAD and
+		#     ASSIMILATE_HEAD when they're merged, so its tree is guaranteed not to
+		#     result in merge conflicts (empty diff against itself, after all), and is
+		#     an ancestor of HEAD so hopefully is closer to when $assimilatee actually
+		#     diverged from the subhistory of Sub in HEAD. In fact, this does exactly
+		#     the right thing in a common use case: say Sub is some subhistory in Main
+		#     (split out or merged in, doesn't matter), and after some changes to Main
+		#     a new Sub commit is split out and merged into Sub, and then commits are
+		#     added on top of that merge commit that we want to merge back into Main.
+		#     We're going to have to assimilate a merge commit whose parents' Main
+		#     trees are different ("some changes to Main" happened between them), but
+		#     one is a descendant of the other so there's an obvious right merge base
+		#     Main tree, which is exactly what we use.
+		merge_base="$(git merge-base SPLIT_HEAD $assimilatee)"
+		default_Main_tree=$(test $(echo "$merge_base" | wc -l) = 1 \
+			&& cat "$GIT_DIR/subhistory-tmp/split-to-orig-map/$merge_base" \
+			|| echo HEAD)
 		index_filter='
 			if git rev-parse --verify -q $GIT_COMMIT^2 >/dev/null # if this is a merge
 			then
@@ -216,7 +237,7 @@ subhistory_assimilate () {
 						parent_Main_tree=$(git write-tree)
 					elif test $(git write-tree) != $parent_Main_tree
 					then
-						git read-tree HEAD && # TODO: find earliest merged tree
+						git read-tree '$default_Main_tree' && # TODO: find earliest merged tree
 						git rm --cached -r '"'$path_to_sub'"' -q &&
 						break
 					fi
