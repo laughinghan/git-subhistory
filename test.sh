@@ -141,7 +141,7 @@ assert "rest of merged tree is the same as before" \
 
 say
 say '###'
-say "# Assimilated merge commits with the same Main tree, keep it"
+say "# Assimilating merge commits with the same Main tree, keep it"
 git checkout subproj -q
 git branch other-subproj
 add_and_commit 'extend Sub somehow' extend-Sub-somehow 'Extend Sub somehow'
@@ -162,7 +162,7 @@ assert "rest of merged tree is the same as before" \
 
 say
 say '###'
-say '# Assimilated merge commits with different Main trees, use HEAD'
+say '# Assimilating merge commits with different Main trees, use HEAD'
 git checkout -b yet-more-subproj subproj -q
 add_and_commit 'yet more Sub fixes' yet-more-Sub-fixes
 git checkout - -q
