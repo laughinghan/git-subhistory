@@ -188,10 +188,8 @@ git-subhistory assimilate <subproj-path> <subproj-branch>
 git-subhistory merge <subproj-path> <subproj-branch>
 ```
 
-Almost literally just:
-```
-git-subhistory assimilate "$@" && git merge ASSIMILATE_HEAD
-```
+Almost literally just
+`git-subhistory assimilate "$@" && git merge ASSIMILATE_HEAD`.
 
 Notes about...
 
