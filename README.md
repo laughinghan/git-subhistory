@@ -191,18 +191,18 @@ git-subhistory merge <subproj-path> <subproj-branch>
 Almost literally just
 `git-subhistory assimilate "$@" && git merge ASSIMILATE_HEAD`.
 
-Notes about...
+##### Notes
 
-working directory:  
+- working directory:  
   Unlike `git-submodule` and `git-subtree`, `git-subhistory` does NOT "need to
   [be run] from the toplevel of the working tree", run it wherever you
   damn well please, even inside `path/to/sub/` with `.` as `<subproj-path>`.
 
-`SPLIT_HEAD`:  
+- `SPLIT_HEAD`:  
   All commands run `git-subhistory split` at some point, mutating
   `SPLIT_HEAD` to be `HEAD` split at `<subproj-path>`.
 
-grafts/replacement refs:  
+- grafts/replacement refs:  
   Synthetic commits are all created with `git-filter-branch`, which honors
   the `info/grafts` file and refs in `refs/replaces/`. Grafts and
   replacement refs will hence be permanently baked into the synthetic
