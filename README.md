@@ -12,7 +12,7 @@ pass "Sub's" subdirectory (call it `path/to/sub/`) as an argument to
 are tracked directly by the "Main" repo like any other files, and no
 other git tools know or care that `path/to/sub/` contains a subproject.
 
-### WAIT, HOW DOES THIS WORK?
+### WAIT BUT WHAT DOES THIS _DO_?
 
 Well, you know how you can `git log path/to/sub/` to see the history
 of just stuff in `path/to/sub/`? `git-subhistory split` (and
