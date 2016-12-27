@@ -2,7 +2,7 @@
 
 by Han <laughinghan@gmail.com>
 
-### Intro
+### Introduction
 
 `git-subhistory`, like `git-submodule` and `git-subtree`, manages subprojects
 (call one "Sub") in a superproject (call it "Main") git repo. Like
