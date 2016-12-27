@@ -2,7 +2,7 @@
 
 by Han <laughinghan@gmail.com>
 
-### INTRO
+### Intro
 
 `git-subhistory`, like `git-submodule` and `git-subtree`, manages subprojects
 (call one "Sub") in a superproject (call it "Main") git repo. Like
@@ -12,7 +12,7 @@ pass "Sub's" subdirectory (call it `path/to/sub/`) as an argument to
 are tracked directly by the "Main" repo like any other files, and no
 other git tools know or care that `path/to/sub/` contains a subproject.
 
-### WAIT BUT WHAT DOES THIS _DO_?
+### Wait but what does this _do_?
 
 Well, you know how you can `git log path/to/sub/` to see the history
 of just stuff in `path/to/sub/`? `git-subhistory split` (and
@@ -28,7 +28,7 @@ same changes on top of the original "Main" commits, then merging them.
 (Contrast `git-subtree merge`, which merges in such a way that the
 resulting tree is good, but messes up the commit graph.)
 
-### EXAMPLE
+### Example
 
 Let's say we have history like so:
 
@@ -148,7 +148,7 @@ Sub inside `path/to/sub/` after adding `path/to/sub/another-Sub-thing`,
 allowing them to merge cleanly like they clearly should, no commits
 duplicated.
 
-### DESCRIPTION
+### Description
 
 - `git-subhistory split <subproj-path> [(-b | -B) <subproj-branch>]`
   
@@ -206,7 +206,7 @@ duplicated.
    the synthetic history? But originals and synthetic grafts/replacement
    refs would have to be modified in sync.)
 
-### COMPARISON WITH GIT-SUBTREE
+### Comparison with `git-subtree`
 
 I actually think `git-subtree` was halfway there, it got splitting pretty
 much right, but then did merging wrong and had to needlessly complicate
