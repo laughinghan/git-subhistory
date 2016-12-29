@@ -34,19 +34,20 @@ resulting tree is good, but messes up the commit graph.)
 Let's say we have history like so:
 
 ```
-  $ git log --graph --oneline --decorate --stat
-  * c79da42 (HEAD, master) Add another Main thing
-  |  another-Main-thing | 1 +
-  |  1 file changed, 1 insertion(+)
-  * 6285d3c Add another Sub thing
-  |  path/to/sub/another-Sub-thing | 1 +
-  |  1 file changed, 1 insertion(+)
-  * 81ac521 Add a Sub thing
-  |  path/to/sub/a-Sub-thing | 1 +
-  |  1 file changed, 1 insertion(+)
-  * c242f3e Add a Main thing
-     a-Main-thing | 1 +
-     1 file changed, 1 insertion(+)
+                                                                                                [HEAD]
+[initial commit]                                                                                [master]
+o-------------------------------o-------------------------------o-------------------------------o
+Add a Main thing                Add a Sub thing                 Add another Sub thing           Add another Main thing
+ __________________________       __________________________      __________________________      __________________________
+|                          |     |                          |    |                          |    |                          |
+|  Files:                  |     |  Files:                  |    |  Files:                  |    |  Files:                  |
+|  + a-Main-thing          |     |    a-Main-thing          |    |    a-Main-thing          |    |    a-Main-thing          |
+|                          |     |  + path/to/sub/          |    |    path/to/sub/          |    |  + another-Main-thing    |
+|                          |     |  +   a-Sub-thing         |    |      a-Sub-thing         |    |    path/to/sub/          |
+|                          |     |                          |    |  +   another-Sub-thing   |    |      a-Sub-thing         |
+|                          |     |                          |    |                          |    |      another-Sub-thing   |
+|                          |     |                          |    |                          |    |                          |
+|__________________________|     |__________________________|    |__________________________|    |__________________________|
 ```
 
 We can split out the commit history of just Sub in `path/to/sub/`:
@@ -57,25 +58,38 @@ We can split out the commit history of just Sub in `path/to/sub/`:
   Ref 'refs/heads/subproj' was rewritten
 
   Split out history of path/to/sub/ to subproj (also SPLIT_HEAD)
-  $ git log --graph --oneline --decorate --stat --all
-  * c79da42 (HEAD, master) Add another Main thing
-  |  another-Main-thing | 1 +
-  |  1 file changed, 1 insertion(+)
-  * 6285d3c Add another Sub thing
-  |  path/to/sub/another-Sub-thing | 1 +
-  |  1 file changed, 1 insertion(+)
-  * 81ac521 Add a Sub thing
-  |  path/to/sub/a-Sub-thing | 1 +
-  |  1 file changed, 1 insertion(+)
-  * c242f3e Add a Main thing
-     a-Main-thing | 1 +
-     1 file changed, 1 insertion(+)
-  * 13aa18a (subproj) Add another Sub thing
-  |  another-Sub-thing | 1 +
-  |  1 file changed, 1 insertion(+)
-  * 4970e20 Add a Sub thing
-     a-Sub-thing | 1 +
-     1 file changed, 1 insertion(+)
+```
+
+Now our total commit history looks like:
+
+```
+                                                                                                [HEAD]
+[initial commit]                                                                                [master]
+o-------------------------------o-------------------------------o-------------------------------o
+Add a Main thing                Add a Sub thing                 Add another Sub thing           Add another Main thing
+ __________________________       __________________________      __________________________      __________________________
+|                          |     |                          |    |                          |    |                          |
+|  Files:                  |     |  Files:                  |    |  Files:                  |    |  Files:                  |
+|  + a-Main-thing          |     |    a-Main-thing          |    |    a-Main-thing          |    |    a-Main-thing          |
+|                          |     |  + path/to/sub/          |    |    path/to/sub/          |    |  + another-Main-thing    |
+|                          |     |  +   a-Sub-thing         |    |      a-Sub-thing         |    |    path/to/sub/          |
+|                          |     |                          |    |  +   another-Sub-thing   |    |      a-Sub-thing         |
+|                          |     |                          |    |                          |    |      another-Sub-thing   |
+|                          |     |                          |    |                          |    |                          |
+|__________________________|     |__________________________|    |__________________________|    |__________________________|
+
+                                [SPLIT_HEAD]
+[initial commit]                [subproj]
+o-------------------------------o
+Add a Sub thing                 Add another Sub thing
+  __________________________      __________________________
+ |                          |    |                          |
+ |  Files:                  |    |  Files:                  |
+ |  + a-Sub-thing           |    |    a-Sub-thing           |
+ |                          |    |  + another-Sub-thing     |
+ |                          |    |                          |
+ |                          |    |                          |
+ |__________________________|    |__________________________|
 ```
 
 Notice 2 disconnected histories here, the untouched `master` branch, and
@@ -85,19 +99,19 @@ implausibly, our code isn't perfect and bugfixes are contributed to the
 public repo. Now we've `git pull`-ed in upstream bugfixes:
 
 ```
-  $ git log --graph --oneline --decorate --stat subproj
-  * d535a7c (subproj) Fix Sub further
-  |  fix-Sub-further | 1 +
-  |  1 file changed, 1 insertion(+)
-  * b7909ee Fix Sub somehow
-  |  fix-Sub-somehow | 1 +
-  |  1 file changed, 1 insertion(+)
-  * 13aa18a Add another Sub thing
-  |  another-Sub-thing | 1 +
-  |  1 file changed, 1 insertion(+)
-  * 4970e20 Add a Sub thing
-     a-Sub-thing | 1 +
-     1 file changed, 1 insertion(+)
+                                                                                                [sub-upstream/master]  # remote-tracking branch
+[initial commit]                                                                                [subproj]
+o-------------------------------o-------------------------------o-------------------------------o
+Add a Sub thing                 Add another Sub thing           Fix Sub somehow                 Fix Sub further
+  __________________________      __________________________      __________________________      __________________________
+ |                          |    |                          |    |                          |    |                          |
+ |  Files:                  |    |  Files:                  |    |  Files:                  |    |  Files:                  |
+ |  + a-Sub-thing           |    |    a-Sub-thing           |    |    a-Sub-thing           |    |    a-Sub-thing           |
+ |                          |    |  + another-Sub-thing     |    |    another-Sub-thing     |    |    another-Sub-thing     |
+ |                          |    |                          |    |  + fix-Sub-somehow       |    |    fix-Sub-somehow       |
+ |                          |    |                          |    |                          |    |  + fix-Sub-further       |
+ |                          |    |                          |    |                          |    |                          |
+ |__________________________|    |__________________________|    |__________________________|    |__________________________|
 ```
 
 Here's where the magic happens: we can easily merge these changes into
@@ -119,28 +133,28 @@ Main **using the `Add another Sub thing` commit as the merge base**:
    2 files changed, 2 insertions(+)
    create mode 100644 path/to/sub/fix-Sub-further
    create mode 100644 path/to/sub/fix-Sub-somehow
-  $ git log --graph --oneline --decorate --stat
-  *   2626aba (HEAD, master) Merge subhistory branch 'subproj' under path/to/sub/
-  |\
-  | * ff9f142 Fix Sub further
-  | |  path/to/sub/fix-Sub-futher | 1 +
-  | |  1 file changed, 1 insertion(+)
-  | * e2d4c00 Fix Sub somehow
-  | |  path/to/sub/fix-Sub-somehow | 1 +
-  | |  1 file changed, 1 insertion(+)
-  * | c79da42 Add another Main thing
-  |/
-  |    another-Main-thing | 1 +
-  |    1 file changed, 1 insertion(+)
-  * 6285d3c Add another Sub thing
-  |  path/to/sub/another-Sub-thing | 1 +
-  |  1 file changed, 1 insertion(+)
-  * 81ac521 Add a Sub thing
-  |  path/to/sub/a-Sub-thing | 1 +
-  |  1 file changed, 1 insertion(+)
-  * c242f3e Add a Main thing
-     a-Main-thing | 1 +
-     1 file changed, 1 insertion(+)
+```
+
+Now our history looks like:
+
+```
+                                                                                                                                    [HEAD]
+                                                                                                                                    [master]
+⋯-o-------------------------------o--------------------------------------------------------------------------------------------------o
+  |\------------------------------|--------------------------------o--------------------------------o-------------------------------/|
+  Add another Sub thing           Add another Main thing           Fix Sub somehow                  Fix Sub further                  Merge subhistory branch 'subproj' under path/to/sub/
+    __________________________      __________________________       __________________________       __________________________       __________________________
+   |                          |    |                          |     |                          |     |                          |     |                          |
+   |  Files:                  |    |  Files:                  |     |  Files:                  |     |  Files:                  |     |  Files:                  |
+   |    a-Main-thing          |    |    a-Main-thing          |     |    a-Main-thing          |     |    a-Main-thing          |     |    a-Main-thing          |
+   |    path/to/sub/          |    |  + another-Main-thing    |     |    path/to/sub/          |     |    path/to/sub/          |     |  < another-Main-thing    |
+   |      a-Sub-thing         |    |    path/to/sub/          |     |      a-Sub-thing         |     |      a-Sub-thing         |     |    path/to/sub/          |
+   |  +   another-Sub-thing   |    |      a-Sub-thing         |     |      another-Sub-thing   |     |      another-Sub-thing   |     |      a-Sub-thing         |
+   |                          |    |      another-Sub-thing   |     |  +   fix-Sub-somehow     |     |      fix-Sub-somehow     |     |      another-Sub-thing   |
+   |                          |    |                          |     |                          |     |  +   fix-Sub-further     |     |  >   fix-Sub-somehow     |
+   |                          |    |                          |     |                          |     |                          |     |  >   fix-Sub-further     |
+   |                          |    |                          |     |                          |     |                          |     |                          |
+   |__________________________|    |__________________________|     |__________________________|     |__________________________|     |__________________________|
 ```
 
 See that? The commits on `subproj` that fixed Sub after adding
