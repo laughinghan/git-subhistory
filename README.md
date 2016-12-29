@@ -4,13 +4,14 @@ by Han <laughinghan@gmail.com>
 
 ### Introduction
 
-`git-subhistory`, like `git-submodule` and `git-subtree`, manages subprojects
-(call one "Sub") in a superproject (call it "Main") git repo. Like
-`git-subtree` but unlike `git-submodule`, `git-subhistory` is stateless, you
-pass "Sub's" subdirectory (call it `path/to/sub/`) as an argument to
-`git-subhistory` but it's not specially marked in any way, "Sub's" files
-are tracked directly by the "Main" repo like any other files, and no
-other git tools know or care that `path/to/sub/` contains a subproject.
+`git-subhistory`, like `git-submodule` and `git-subtree`, manages
+subprojects (call one "Sub") in a superproject (call it "Main") git
+repo. Like `git-subtree` but unlike `git-submodule`, `git-subhistory` is
+stateless, you pass "Sub's" subdirectory (call it `path/to/sub/`) as an
+argument to `git-subhistory` but it's not specially marked in any way,
+"Sub's" files are tracked directly by the "Main" repo like any other
+files, and no other git tools know or care that `path/to/sub/` contains
+a subproject.
 
 ### Wait but what does this _do_?
 
