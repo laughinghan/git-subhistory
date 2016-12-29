@@ -152,7 +152,7 @@ duplicated.
 ### Description
 
 - `git-subhistory split <subproj-path> [(-b | -B) <subproj-branch>]`
-  
+
   Literally just uses the `--subdirectory-filter` of `git-filter-branch`,
   which does pretty much the same thing as `git-subtree split`: it
   generates a completely new, synthetic commit graph of the history of
@@ -182,22 +182,22 @@ duplicated.
    branch can be like cherry-picking.)
 
 - `git-subhistory merge <subproj-path> <subproj-branch>`
-  
+
   Almost literally just
   `git-subhistory assimilate "$@" && git merge ASSIMILATE_HEAD`.
 
 #### Notes
 
-- working directory:  
+- working directory:
   Unlike `git-submodule` and `git-subtree`, `git-subhistory` does NOT "need to
   [be run] from the toplevel of the working tree", run it wherever you
   damn well please, even inside `path/to/sub/` with `.` as `<subproj-path>`.
 
-- `SPLIT_HEAD`:  
+- `SPLIT_HEAD`:
   All commands run `git-subhistory split` at some point, mutating
   `SPLIT_HEAD` to be `HEAD` split at `<subproj-path>`.
 
-- grafts/replacement refs:  
+- grafts/replacement refs:
   Synthetic commits are all created with `git-filter-branch`, which honors
   the `info/grafts` file and refs in `refs/replaces/`. Grafts and
   replacement refs will hence be permanently baked into the synthetic
