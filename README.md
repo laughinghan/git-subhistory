@@ -135,26 +135,26 @@ Main **using the `Add another Sub thing` commit as the merge base**:
    create mode 100644 path/to/sub/fix-Sub-somehow
 ```
 
-Now our history looks like:
+Now the history of `master` looks like:
 
 ```
-                                                                                                                                    [HEAD]
-                                                                                                                                    [master]
-⋯-o-------------------------------o--------------------------------------------------------------------------------------------------o
-  |\------------------------------|--------------------------------o--------------------------------o-------------------------------/|
-  Add another Sub thing           Add another Main thing           Fix Sub somehow                  Fix Sub further                  Merge subhistory branch 'subproj' under path/to/sub/
-    __________________________      __________________________       __________________________       __________________________       __________________________
-   |                          |    |                          |     |                          |     |                          |     |                          |
-   |  Files:                  |    |  Files:                  |     |  Files:                  |     |  Files:                  |     |  Files:                  |
-   |    a-Main-thing          |    |    a-Main-thing          |     |    a-Main-thing          |     |    a-Main-thing          |     |    a-Main-thing          |
-   |    path/to/sub/          |    |  + another-Main-thing    |     |    path/to/sub/          |     |    path/to/sub/          |     |  < another-Main-thing    |
-   |      a-Sub-thing         |    |    path/to/sub/          |     |      a-Sub-thing         |     |      a-Sub-thing         |     |    path/to/sub/          |
-   |  +   another-Sub-thing   |    |      a-Sub-thing         |     |      another-Sub-thing   |     |      another-Sub-thing   |     |      a-Sub-thing         |
-   |                          |    |      another-Sub-thing   |     |  +   fix-Sub-somehow     |     |      fix-Sub-somehow     |     |      another-Sub-thing   |
-   |                          |    |                          |     |                          |     |  +   fix-Sub-further     |     |  >   fix-Sub-somehow     |
-   |                          |    |                          |     |                          |     |                          |     |  >   fix-Sub-further     |
-   |                          |    |                          |     |                          |     |                          |     |                          |
-   |__________________________|    |__________________________|     |__________________________|     |__________________________|     |__________________________|
+                                                                                                                                                                                                  [HEAD]
+[initial commit]                                                                                                                                                                                  [master]
+o-------------------------------o-------------------------------o-------------------------------o--------------------------------------------------------------------------------------------------o
+|                               |                               |\------------------------------|--------------------------------o--------------------------------o-------------------------------/|
+Add a Main thing                Add a Sub thing                 Add another Sub thing           Add another Main thing           Fix Sub somehow                  Fix Sub further                  Merge subhistory branch 'subproj' under path/to/sub/
+ __________________________      __________________________      __________________________      __________________________       __________________________       __________________________       __________________________
+|                          |    |                          |    |                          |    |                          |     |                          |     |                          |     |                          |
+|  Files:                  |    |  Files:                  |    |  Files:                  |    |  Files:                  |     |  Files:                  |     |  Files:                  |     |  Files:                  |
+|  + a-Main-thing          |    |    a-Main-thing          |    |    a-Main-thing          |    |    a-Main-thing          |     |    a-Main-thing          |     |    a-Main-thing          |     |    a-Main-thing          |
+|                          |    |  + path/to/sub/          |    |    path/to/sub/          |    |  + another-Main-thing    |     |    path/to/sub/          |     |    path/to/sub/          |     |  < another-Main-thing    |
+|                          |    |  +   a-Sub-thing         |    |      a-Sub-thing         |    |    path/to/sub/          |     |      a-Sub-thing         |     |      a-Sub-thing         |     |    path/to/sub/          |
+|                          |    |                          |    |  +   another-Sub-thing   |    |      a-Sub-thing         |     |      another-Sub-thing   |     |      another-Sub-thing   |     |      a-Sub-thing         |
+|                          |    |                          |    |                          |    |      another-Sub-thing   |     |  +   fix-Sub-somehow     |     |      fix-Sub-somehow     |     |      another-Sub-thing   |
+|                          |    |                          |    |                          |    |                          |     |                          |     |  +   fix-Sub-further     |     |  >   fix-Sub-somehow     |
+|                          |    |                          |    |                          |    |                          |     |                          |     |                          |     |  >   fix-Sub-further     |
+|                          |    |                          |    |                          |    |                          |     |                          |     |                          |     |                          |
+|__________________________|    |__________________________|    |__________________________|    |__________________________|     |__________________________|     |__________________________|     |__________________________|
 ```
 
 See that? The commits on `subproj` that fixed Sub after adding
