@@ -38,16 +38,16 @@ Let's say we have history like so:
 [initial commit]                                                                                [master]
 o-------------------------------o-------------------------------o-------------------------------o
 Add a Main thing                Add a Sub thing                 Add another Sub thing           Add another Main thing
- __________________________       __________________________      __________________________      __________________________
-|                          |     |                          |    |                          |    |                          |
-|  Files:                  |     |  Files:                  |    |  Files:                  |    |  Files:                  |
-|  + a-Main-thing          |     |    a-Main-thing          |    |    a-Main-thing          |    |    a-Main-thing          |
-|                          |     |  + path/to/sub/          |    |    path/to/sub/          |    |  + another-Main-thing    |
-|                          |     |  +   a-Sub-thing         |    |      a-Sub-thing         |    |    path/to/sub/          |
-|                          |     |                          |    |  +   another-Sub-thing   |    |      a-Sub-thing         |
-|                          |     |                          |    |                          |    |      another-Sub-thing   |
-|                          |     |                          |    |                          |    |                          |
-|__________________________|     |__________________________|    |__________________________|    |__________________________|
+ __________________________      __________________________      __________________________      __________________________
+|                          |    |                          |    |                          |    |                          |
+|  Files:                  |    |  Files:                  |    |  Files:                  |    |  Files:                  |
+|  + a-Main-thing          |    |    a-Main-thing          |    |    a-Main-thing          |    |    a-Main-thing          |
+|                          |    |  + path/to/sub/          |    |    path/to/sub/          |    |  + another-Main-thing    |
+|                          |    |  +   a-Sub-thing         |    |      a-Sub-thing         |    |    path/to/sub/          |
+|                          |    |                          |    |  +   another-Sub-thing   |    |      a-Sub-thing         |
+|                          |    |                          |    |                          |    |      another-Sub-thing   |
+|                          |    |                          |    |                          |    |                          |
+|__________________________|    |__________________________|    |__________________________|    |__________________________|
 ```
 
 We can split out the commit history of just Sub in `path/to/sub/`:
@@ -67,29 +67,29 @@ Now our total commit history looks like:
 [initial commit]                                                                                [master]
 o-------------------------------o-------------------------------o-------------------------------o
 Add a Main thing                Add a Sub thing                 Add another Sub thing           Add another Main thing
- __________________________       __________________________      __________________________      __________________________
-|                          |     |                          |    |                          |    |                          |
-|  Files:                  |     |  Files:                  |    |  Files:                  |    |  Files:                  |
-|  + a-Main-thing          |     |    a-Main-thing          |    |    a-Main-thing          |    |    a-Main-thing          |
-|                          |     |  + path/to/sub/          |    |    path/to/sub/          |    |  + another-Main-thing    |
-|                          |     |  +   a-Sub-thing         |    |      a-Sub-thing         |    |    path/to/sub/          |
-|                          |     |                          |    |  +   another-Sub-thing   |    |      a-Sub-thing         |
-|                          |     |                          |    |                          |    |      another-Sub-thing   |
-|                          |     |                          |    |                          |    |                          |
-|__________________________|     |__________________________|    |__________________________|    |__________________________|
+ __________________________      __________________________      __________________________      __________________________
+|                          |    |                          |    |                          |    |                          |
+|  Files:                  |    |  Files:                  |    |  Files:                  |    |  Files:                  |
+|  + a-Main-thing          |    |    a-Main-thing          |    |    a-Main-thing          |    |    a-Main-thing          |
+|                          |    |  + path/to/sub/          |    |    path/to/sub/          |    |  + another-Main-thing    |
+|                          |    |  +   a-Sub-thing         |    |      a-Sub-thing         |    |    path/to/sub/          |
+|                          |    |                          |    |  +   another-Sub-thing   |    |      a-Sub-thing         |
+|                          |    |                          |    |                          |    |      another-Sub-thing   |
+|                          |    |                          |    |                          |    |                          |
+|__________________________|    |__________________________|    |__________________________|    |__________________________|
 
                                 [SPLIT_HEAD]
 [initial commit]                [subproj]
 o-------------------------------o
 Add a Sub thing                 Add another Sub thing
-  __________________________      __________________________
- |                          |    |                          |
- |  Files:                  |    |  Files:                  |
- |  + a-Sub-thing           |    |    a-Sub-thing           |
- |                          |    |  + another-Sub-thing     |
- |                          |    |                          |
- |                          |    |                          |
- |__________________________|    |__________________________|
+ __________________________      __________________________
+|                          |    |                          |
+|  Files:                  |    |  Files:                  |
+|  + a-Sub-thing           |    |    a-Sub-thing           |
+|                          |    |  + another-Sub-thing     |
+|                          |    |                          |
+|                          |    |                          |
+|__________________________|    |__________________________|
 ```
 
 Notice 2 disconnected histories here, the untouched `master` branch, and
@@ -103,15 +103,15 @@ public repo. Now we've `git pull`-ed in upstream bugfixes:
 [initial commit]                                                                                [subproj]
 o-------------------------------o-------------------------------o-------------------------------o
 Add a Sub thing                 Add another Sub thing           Fix Sub somehow                 Fix Sub further
-  __________________________      __________________________      __________________________      __________________________
- |                          |    |                          |    |                          |    |                          |
- |  Files:                  |    |  Files:                  |    |  Files:                  |    |  Files:                  |
- |  + a-Sub-thing           |    |    a-Sub-thing           |    |    a-Sub-thing           |    |    a-Sub-thing           |
- |                          |    |  + another-Sub-thing     |    |    another-Sub-thing     |    |    another-Sub-thing     |
- |                          |    |                          |    |  + fix-Sub-somehow       |    |    fix-Sub-somehow       |
- |                          |    |                          |    |                          |    |  + fix-Sub-further       |
- |                          |    |                          |    |                          |    |                          |
- |__________________________|    |__________________________|    |__________________________|    |__________________________|
+ __________________________      __________________________      __________________________      __________________________
+|                          |    |                          |    |                          |    |                          |
+|  Files:                  |    |  Files:                  |    |  Files:                  |    |  Files:                  |
+|  + a-Sub-thing           |    |    a-Sub-thing           |    |    a-Sub-thing           |    |    a-Sub-thing           |
+|                          |    |  + another-Sub-thing     |    |    another-Sub-thing     |    |    another-Sub-thing     |
+|                          |    |                          |    |  + fix-Sub-somehow       |    |    fix-Sub-somehow       |
+|                          |    |                          |    |                          |    |  + fix-Sub-further       |
+|                          |    |                          |    |                          |    |                          |
+|__________________________|    |__________________________|    |__________________________|    |__________________________|
 ```
 
 Here's where the magic happens: we can easily merge these changes into
