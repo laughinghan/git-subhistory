@@ -152,8 +152,8 @@ Add a Main thing                Add a Sub thing                 Add another Sub 
 |                          |    |                          |    |  +   another-Sub-thing   |    |      a-Sub-thing         |     |      another-Sub-thing   |     |      another-Sub-thing   |     |      a-Sub-thing         |
 |                          |    |                          |    |                          |    |      another-Sub-thing   |     |  +   fix-Sub-somehow     |     |      fix-Sub-somehow     |     |      another-Sub-thing   |
 |                          |    |                          |    |                          |    |                          |     |                          |     |  +   fix-Sub-further     |     |  >   fix-Sub-somehow     |
-|                          |    |                          |    |                          |    |                          |     |                          |     |                          |     |  >   fix-Sub-further     |
-|                          |    |                          |    |                          |    |                          |     |                          |     |                          |     |                          |
+|                          |    |                          |    |                          |    |                          |     | [Note: no                |     |                          |     |  >   fix-Sub-further     |
+|                          |    |                          |    |                          |    |                          |     |  another-Main-thing yet] |     |                          |     |                          |
 |__________________________|    |__________________________|    |__________________________|    |__________________________|     |__________________________|     |__________________________|     |__________________________|
 ```
 
