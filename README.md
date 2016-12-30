@@ -223,33 +223,22 @@ commands, the history after splitting would be identical (right down to
 the hashes&mdash;the complication is only when you've `git-subtree merge`-ed
 before into the branch being split), but after merging, you'd get:
 
-    $ git log --graph --oneline --decorate --stat
-    *   0584b9a (HEAD, master) Merge commit 'd535a7c1c90b42d66eb0938172538aa5fc878460'
-    |\
-    | * d535a7c (subproj) Fix Sub further
-    | |  fix-Sub-further | 1 +
-    | |  1 file changed, 1 insertion(+)
-    | * b7909ee Fix Sub somehow
-    | |  fix-Sub-somehow | 1 +
-    | |  1 file changed, 1 insertion(+)
-    | * 13aa18a Add another Sub thing
-    | |  another-Sub-thing | 1 +
-    | |  1 file changed, 1 insertion(+)
-    | * 4970e20 Add a Sub thing
-    |    a-Sub-thing | 1 +
-    |    1 file changed, 1 insertion(+)
-    * c79da42 Add another Main thing
-    |  another-Main-thing | 1 +
-    |  1 file changed, 1 insertion(+)
-    * 6285d3c Add another Sub thing
-    |  path/to/sub/another-Sub-thing | 1 +
-    |  1 file changed, 1 insertion(+)
-    * 81ac521 Add a Sub thing
-    |  path/to/sub/a-Sub-thing | 1 +
-    |  1 file changed, 1 insertion(+)
-    * c242f3e Add a Main thing
-       a-Main-thing | 1 +
-       1 file changed, 1 insertion(+)
+    [initial commit]                                                                                                                 [initial commit]                                                                                                                    [master]
+    o-------------------------------o-------------------------------o-------------------------------o--------------------------------|-----------------------------------------------------------------------------------------------------------------------------------o
+    |                               |                               |                               |                                o--------------------------------o--------------------------------o--------------------------------o-------------------------------/|
+    Add a Main thing                Add a Sub thing                 Add another Sub thing           Add another Main thing           Add a Sub thing                  Add another Sub thing            Fix Sub somehow                  Fix Sub further                  Merge commit 'd535a7c' under subtree path/to/sub/
+     __________________________      __________________________      __________________________      __________________________       __________________________       __________________________       __________________________       __________________________       __________________________
+    |                          |    |                          |    |                          |    |                          |     |                          |     |                          |     |                          |     |                          |     |                          |
+    |  Files:                  |    |  Files:                  |    |  Files:                  |    |  Files:                  |     |  Files:                  |     |  Files:                  |     |  Files:                  |     |  Files:                  |     |  Files:                  |
+    |  + a-Main-thing          |    |    a-Main-thing          |    |    a-Main-thing          |    |    a-Main-thing          |     |  + a-Sub-thing           |     |    a-Sub-thing           |     |    a-Sub-thing           |     |    a-Sub-thing           |     |    a-Main-thing          |
+    |                          |    |  + path/to/sub/          |    |    path/to/sub/          |    |  + another-Main-thing    |     |                          |     |  + another-Sub-thing     |     |    another-Sub-thing     |     |    another-Sub-thing     |     |  < another-Main-thing    |
+    |                          |    |  +   a-Sub-thing         |    |      a-Sub-thing         |    |    path/to/sub/          |     |                          |     |                          |     |  + fix-Sub-somehow       |     |    fix-Sub-somehow       |     |    path/to/sub/          |
+    |                          |    |                          |    |  +   another-Sub-thing   |    |      a-Sub-thing         |     |                          |     |                          |     |                          |     |  + fix-Sub-further       |     |      a-Sub-thing         |
+    |                          |    |                          |    |                          |    |      another-Sub-thing   |     |                          |     |                          |     |                          |     |                          |     |      another-Sub-thing   |
+    |                          |    |                          |    |                          |    |                          |     |                          |     |                          |     |                          |     |                          |     |  >   fix-Sub-somehow     |
+    |                          |    |                          |    |                          |    |                          |     |                          |     |                          |     |                          |     |                          |     |  >   fix-Sub-further     |
+    |                          |    |                          |    |                          |    |                          |     |                          |     |                          |     |                          |     |                          |     |                          |
+    |__________________________|    |__________________________|    |__________________________|    |__________________________|     |__________________________|     |__________________________|     |__________________________|     |__________________________|     |__________________________|
 
 In this example, the commits adding `path/to/sub/a-Sub-thing` and
 `path/to/sub/another-Sub-thing` to Main were split into commits adding
