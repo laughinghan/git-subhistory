@@ -60,7 +60,9 @@ We can split out the commit history of just Sub in `path/to/sub/`:
   Split out history of path/to/sub/ to subproj (also SPLIT_HEAD)
 ```
 
-Now our total commit history looks like:
+We now have 2 disconnected histories, the untouched `master` branch, and
+a new `subproj` branch, with the history of just the stuff inside
+`path/to/sub/`:
 
 ```
                                                                                                 [HEAD]
@@ -92,11 +94,9 @@ Add a Sub thing                 Add another Sub thing
 |__________________________|    |__________________________|
 ```
 
-Notice 2 disconnected histories here, the untouched `master` branch, and
-this new `subproj` branch, with the history of just the stuff inside
-`path/to/sub/`. Say we push `subproj` to a public repo for just Sub, and
-implausibly, our code isn't perfect and bugfixes are contributed to the
-public repo. Now we've `git pull`-ed in upstream bugfixes:
+Say we push `subproj` to a public repo for just Sub, and implausibly,
+our code isn't perfect and bugfixes are contributed to the public repo.
+Now we've `git pull`-ed in upstream bugfixes:
 
 ```
                                                                                                 [sub-upstream/master]  # remote-tracking branch
