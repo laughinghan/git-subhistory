@@ -125,7 +125,7 @@ Main **using the `Add another Sub thing` commit as the merge base**:
   Split out history of path/to/sub/ to SPLIT_HEAD
 
   Rewrite d535a7c1c90b42d66eb0938172538aa5fc878460 (2/2)
-  Ref 'SUBHISTORY_MERGE_HEAD' was rewritten
+  Ref 'ASSIMILATE_HEAD' was rewritten
 
   Merge made by the 'recursive' strategy.
    path/to/sub/fix-Sub-further | 1 +
