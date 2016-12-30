@@ -26,8 +26,8 @@ Say that happens and commits are made on top of that new commit history.
 Then `git-subhistory merge` merges those changes back into "Main's"
 commit history by inverting `split`, creating new commits making those
 same changes on top of the original "Main" commits, then merging them.
-(Contrast `git-subtree merge`, which merges in such a way that the
-resulting tree is good, but messes up the commit graph.)
+(Contrast `git-subtree merge`, which merges the changes correctly, but
+messes up the commit graph with duplicate commits.
 
 ### Example
 
