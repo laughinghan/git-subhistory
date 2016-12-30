@@ -213,15 +213,10 @@ duplicated.
 
 I actually think `git-subtree` was halfway there, it got splitting pretty
 much right, but then did merging wrong and had to needlessly complicate
-splitting to deal with the broken merging. In fact, I started out trying
-to fork `git-subtree`, intending to add an alternative way to merge,
-until I discovered that `git-subtree split` was now more complicated
-than `git filter-branch --subdirectory-filter`.
-
-If you went through the example above with equivalent `git-subtree`
-commands, the history after splitting would be identical (right down to
-the hashes&mdash;the complication is only when you've `git-subtree merge`-ed
-before into the branch being split), but after merging, you'd get:
+splitting to deal with the broken merging. If you went through the
+example above with equivalent `git-subtree` commands, the history after
+splitting would be identical right down to the hashes, but after
+merging, you'd get:
 
     [initial commit]                                                                                                                 [initial commit]                                                                                                                    [master]
     o-------------------------------o-------------------------------o-------------------------------o--------------------------------|-----------------------------------------------------------------------------------------------------------------------------------o
@@ -240,51 +235,58 @@ before into the branch being split), but after merging, you'd get:
     |                          |    |                          |    |                          |    |                          |     |                          |     |                          |     |                          |     |                          |     |                          |
     |__________________________|    |__________________________|    |__________________________|    |__________________________|     |__________________________|     |__________________________|     |__________________________|     |__________________________|     |__________________________|
 
-In this example, the commits adding `path/to/sub/a-Sub-thing` and
-`path/to/sub/another-Sub-thing` to Main were split into commits adding
-`a-Sub-thing` and `another-Sub-thing` to Sub just like you'd want.
-`git-subhistory split` doesn't just serve the same purpose as
-`git-subtree split`, it actually does almost exactly the same thing and
-often generates identical commits with identical hashes, but is
-implemented as a simple `filter-branch --subdirectory-filter`, whereas
-`git-subtree` "manually" loops through history and calls `git commit-tree`.
-I don't know why it does that, but conjecture that using `filter-branch`
-it would be hard to deal with commits that are `merge -s subtree`-ed in
-(see below), which are exactly where `git-subhistory`-generated commits
-start diverging from `git-subtree`-generated commits.
+Note the duplicate `Add a Sub thing` and `Add another Sub thing` commits.
 
-You can see in the example that `git-subtree merge` does something
-completely different from `git-subhistory merge`. `git-subtree merge`
-actually does `merge --strategy subtree`, which is a fine and dandy
-merge option that would let you include Sub in Main very similarly to
-`git-subhistory`: in Main, you can `merge -s subtree` a commit from an
-upstream Sub repo, and changes to Sub from there will be merged with
-changes to `path/to/sub/` in Main. Importantly, as far as `git-merge` is
-concerned it's just some strategy for merging the trees of two commits,
-so it normally creates a merge commit whose parents are commits from
-each of Main and Sub (notice in the example that the subproject files
-`a-Sub-thing` and `another-Sub-thing` are at different paths between the
-parents of `HEAD`). If merging in upstream changes is all you need, this
-is awesome: next `merge -s subtree`, the last `merge -s subtree`-ed in
-commit will be the merge base, and Sub's commit history shows up in
-Main's commit history.
+What happened was, there were the originals, which add
+`path/to/sub/a-Sub-thing` and `path/to/sub/another-Sub-thing` to Main,
+right? They were split into commits which add `a-Sub-thing` and
+`another-Sub-thing` to Sub, just like you'd want.
 
-What is not awesome is that if you commit changes to Sub in the Main
-repo, split them out into synthetic commits that get merged into an
-upstream Sub repo, and then `merge -s subtree` from upstream Sub back
-into Main, the synthetic commits are totally different from the Main
-commits that changed Sub, neither is a fast-forward of the other, they
-won't be a merge base, and they will both show up in Main's commit
-history, essentially duplicating all commits to Sub made in Main (notice
-in the example, 2 ancestors of `HEAD` create and add `a-Sub-thing` and
-`another-Sub-thing`).
+But then, `git-subtree merge` did `git merge --strategy subtree`, which
+is a fine and dandy merge strategy, but `git-merge` always creates a
+merge commit whose parents are the commits passed to it, and in this
+case one is a commit to Main and one is a commit to Sub: notice how the
+subproject files, `a-Sub-thing` and `another-Sub-thing`, are at
+different paths between the parents of the merge commit.
 
-For this reason, most `git-subtree` tutorials I've seen actually recommend
-using `--squash` when merging, which creates a synthetic commit combining
-all the upstream changes to Sub since the last merge, which solves the
-duplicate commit problem, but then, no upstream Sub commits are in
-Main's history, Main commits are never a fast-forward of any upstream
-Sub commits, and there will never be a merge-base. On projects I've
-worked on where we wanted to both push and pull commits to and from an
-upstream Sub repo (from and to a Main repo), we decided that was worse
-than submodules and used submodules instead.
+Hence duplicated commits: the changes are to different paths.
+
+By contrast, `git-subhistory merge` first does `git-subhistory assimilate`
+to generate synthetic commits to Main from the upstream bugfixes to Sub,
+so both parents of the merge commit are commits to Main. Importantly,
+the synthetic commits are generated on top of the original subproject
+commits, so instead of being duplicated, those originals are the merge
+base, like they should be!
+
+(Asides:
+
+- `merge -s subtree` is actually awesome if you only ever merge in
+  upstream changes and never split out changes to push upstream: next
+  `merge -s subtree`, the commit that was last merged in using
+  `merge -s subtree` will be the merge base, and Sub's commit history
+  shows up in Main's commit history. Our problem with it is that if you
+  do split out any commits, they get duplicated and can't serve as a
+  merge base and will never fast-forward.
+- `git-subtree split` doesn't just serve the same purpose as
+  `git-subhistory split`, it actually does almost exactly the same thing
+  and often generates identical commits with identical hashes. In fact,
+  I started out trying to fork `git-subtree`, intending to add an
+  alternative way to merge, until I discovered that `git-subtree split`
+  was not just `git filter-branch --subdirectory-filter`, it "manually"
+  loops through history and calls `git commit-tree`. I don't know
+  exactly why but I'm pretty sure that's because it does something
+  special with `merge -s subtree` commits, which is where
+  `git-subtree`-generated commits start diverging from plain old
+  `git filter-branch --subdirectory-filter`-generated commits (which
+  what `git-subhistory split` does).
+- Because of all this, most `git-subtree` tutorials I've seen actually
+  recommend using `--squash` when merging, which creates a synthetic
+  commit combining all upstream changes to Sub since the last merge.
+  This solves the duplicate commit problem, but no upstream Sub commits
+  are in Main's history, Main commits are never a fast-forward of any
+  upstream Sub commits, and there will never be a merge-base. On
+  projects I've worked on where we wanted to both push to and pull from
+  an upstream Sub repo, we decided that was worse than submodules and
+  used submodules instead.
+
+)
