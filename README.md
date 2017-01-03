@@ -147,8 +147,8 @@ This goes the other way, too. Say we make further changes to Sub:
 
 And then we `git-subhistory split path/to/sub/ -b subproj2`:
 
-                                                                                                                                     [SPLIT_HEAD]
-    [initial commit]                                                                                                                 [subproj2]
+                                                                                                    [sub-upstream/master]            [SPLIT_HEAD]
+    [initial commit]                                                                                [subproj]                        [subproj2]
     o-------------------------------o-------------------------------o-------------------------------o--------------------------------o
     Add a Sub thing                 Add another Sub thing           Fix Sub somehow                 Fix Sub further                  Add yet another Sub thing
      __________________________      __________________________      __________________________      __________________________       __________________________
