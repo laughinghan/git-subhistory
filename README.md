@@ -121,10 +121,56 @@ doing `git-subhistory merge path/to/sub/ subproj`, resulting in:
     |__________________________|    |__________________________|    |__________________________|    |__________________________|     |__________________________|     |__________________________|     |__________________________|
 
 See that? The commits on `subproj` that fixed Sub after adding
-`another-Sub-thing` were effortlessly transmuted into commits that fix
-Sub inside `path/to/sub/` after adding `path/to/sub/another-Sub-thing`,
-allowing them to merge cleanly like they clearly should, no commits
-duplicated.
+`another-Sub-thing` were assimilated into commits that fix Sub inside
+`path/to/sub/` after adding `path/to/sub/another-Sub-thing`, allowing
+them to merge cleanly like they clearly should, no commits duplicated.
+
+This goes the other way, too. Say we make further changes to Sub:
+
+                                                                                                                                                                                                                                        [HEAD]
+    [initial commit]                                                                                                                                                                                                                    [master]
+    o-------------------------------o-------------------------------o-------------------------------o--------------------------------------------------------------------------------------------------o--------------------------------o
+    |                               |                               |\------------------------------|--------------------------------o--------------------------------o-------------------------------/|                                |
+    Add a Main thing                Add a Sub thing                 Add another Sub thing           Add another Main thing           Fix Sub somehow                  Fix Sub further                  Merge subhistory branch ...      Add yet another Sub thing
+     __________________________      __________________________      __________________________      __________________________       __________________________       __________________________       __________________________       _____________________________
+    |                          |    |                          |    |                          |    |                          |     |                          |     |                          |     |                          |     |                             |
+    |  Files:                  |    |  Files:                  |    |  Files:                  |    |  Files:                  |     |  Files:                  |     |  Files:                  |     |  Files:                  |     |  Files:                     |
+    |  + a-Main-thing          |    |    a-Main-thing          |    |    a-Main-thing          |    |    a-Main-thing          |     |    a-Main-thing          |     |    a-Main-thing          |     |    a-Main-thing          |     |    a-Main-thing             |
+    |                          |    |  + path/to/sub/          |    |    path/to/sub/          |    |  + another-Main-thing    |     |    path/to/sub/          |     |    path/to/sub/          |     |  < another-Main-thing    |     |    another-Main-thing       |
+    |                          |    |  +   a-Sub-thing         |    |      a-Sub-thing         |    |    path/to/sub/          |     |      a-Sub-thing         |     |      a-Sub-thing         |     |    path/to/sub/          |     |    path/to/sub/             |
+    |                          |    |                          |    |  +   another-Sub-thing   |    |      a-Sub-thing         |     |      another-Sub-thing   |     |      another-Sub-thing   |     |      a-Sub-thing         |     |      a-Sub-thing            |
+    |                          |    |                          |    |                          |    |      another-Sub-thing   |     |  +   fix-Sub-somehow     |     |      fix-Sub-somehow     |     |      another-Sub-thing   |     |      another-Sub-thing      |
+    |                          |    |                          |    |                          |    |                          |     |                          |     |  +   fix-Sub-further     |     |  >   fix-Sub-somehow     |     |      fix-Sub-somehow        |
+    |                          |    |                          |    |                          |    |                          |     | [Note: no                |     |                          |     |  >   fix-Sub-further     |     |      fix-Sub-further        |
+    |                          |    |                          |    |                          |    |                          |     |  another-Main-thing yet] |     |                          |     |                          |     |  +   yet-another-Sub-thing  |
+    |__________________________|    |__________________________|    |__________________________|    |__________________________|     |__________________________|     |__________________________|     |__________________________|     |_____________________________|
+
+And then we `git-subhistory split path/to/sub/ -b subproj2`:
+
+                                                                                                                                     [SPLIT_HEAD]
+    [initial commit]                                                                                                                 [subproj2]
+    o-------------------------------o-------------------------------o-------------------------------o--------------------------------o
+    Add a Sub thing                 Add another Sub thing           Fix Sub somehow                 Fix Sub further                  Add yet another Sub thing
+     __________________________      __________________________      __________________________      __________________________       __________________________
+    |                          |    |                          |    |                          |    |                          |     |                          |
+    |  Files:                  |    |  Files:                  |    |  Files:                  |    |  Files:                  |     |  Files:                  |
+    |  + a-Sub-thing           |    |    a-Sub-thing           |    |    a-Sub-thing           |    |    a-Sub-thing           |     |    a-Sub-thing           |
+    |                          |    |  + another-Sub-thing     |    |    another-Sub-thing     |    |    another-Sub-thing     |     |    another-Sub-thing     |
+    |                          |    |                          |    |  + fix-Sub-somehow       |    |    fix-Sub-somehow       |     |    fix-Sub-somehow       |
+    |                          |    |                          |    |                          |    |  + fix-Sub-further       |     |    fix-Sub-further       |
+    |                          |    |                          |    |                          |    |                          |     |  + yet-another-Sub-thing |
+    |__________________________|    |__________________________|    |__________________________|    |__________________________|     |__________________________|
+
+The assimilated commits are guaranteed to map back to the **exact same
+commits** they were assimilated from, down to the hashes. That means
+`subproj2` will be a fast-forward from `subproj`, and if more bugfixes
+have been added upstream, `Fix Sub further` will be the merge base.
+
+This is a data model guarantee, requiring no local state to enforce:
+someone else could pull your `master` into their clone and split them
+out, and they would still map to the exact same commits they were
+assimilated from, and the merge bases and fast-forwards will still be
+exactly right.
 
 ### Description
 
