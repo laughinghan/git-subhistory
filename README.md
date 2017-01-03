@@ -245,9 +245,9 @@ right? They were split into commits which add `a-Sub-thing` and
 But then, `git-subtree merge` did `git merge --strategy subtree`, which
 is a fine and dandy merge strategy, but `git-merge` always creates a
 merge commit whose parents are the commits passed to it, and in this
-case one is a commit to Main and one is a commit to Sub: notice how the
-subproject files, `a-Sub-thing` and `another-Sub-thing`, are at
-different paths between the parents of the merge commit.
+case one is a commit to Main and one is a commit to Sub: notice how in
+the merge commit, the subproject files `a-Sub-thing` and
+`another-Sub-thing` are at different paths in the two parent commits.
 
 Hence duplicated commits: the changes are to different paths.
 
