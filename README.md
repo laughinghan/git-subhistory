@@ -172,7 +172,7 @@ out, and they would still map to the exact same commits they were
 assimilated from, and the merge bases and fast-forwards will still be
 exactly right.
 
-### Description
+### Subcommands
 
 - `git-subhistory split <subproj-path> [(-b | -B) <subproj-branch>]`
 
@@ -208,6 +208,18 @@ exactly right.
 
   Almost literally just
   `git-subhistory assimilate "$@" && git merge ASSIMILATE_HEAD`.
+
+TODO:
+
+- `git-subhistory push <subproj-path> <remote> <remote-branch>`
+
+  Should be just
+  `git-subhistory split <subproj-path> && git push <remote> SPLIT_HEAD:<remote-branch>`.
+
+- `git-subhistory pull <subproj-path> <remote> <remote-branch>`
+
+  Should be just
+  `git fetch <remote> <remote-branch> && git-subhistory merge <subproj-path> FETCH_HEAD`.
 
 #### Notes
 
