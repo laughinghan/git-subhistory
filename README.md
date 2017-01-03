@@ -4,30 +4,29 @@ by Han <laughinghan@gmail.com>
 
 ### Introduction
 
-`git-subhistory`, like `git-submodule` and `git-subtree`, manages
-subprojects (call one "Sub") in a superproject (call it "Main") git
+`git-subhistory` manages virtual subproject repos inside a superproject
 repo. Like `git-subtree` but unlike `git-submodule`, `git-subhistory` is
-stateless, you pass "Sub's" subdirectory (call it `path/to/sub/`) as an
-argument to `git-subhistory` but it's not specially marked in any way,
-"Sub's" files are tracked directly by the "Main" repo like any other
-files, and no other git tools know or care that `path/to/sub/` contains
-a subproject.
+stateless, you pass the subproject's subdirectory (`path/to/sub/`) as an
+argument but the subdirectory isn't specially marked in any way. The
+subproject (Sub)'s files are tracked directly by the superproject (Main)
+repo like any other files, and no other Git tools know or care that
+`path/to/sub/` contains a subproject.
 
-### Wait but what does this _do_?
+You know how you can `git log path/to/sub/` to see the history of just
+the stuff in `path/to/sub/`? Well, `git-subhistory split` creates actual
+commits of just that stuff. This separate commit history of just Sub can
+then be `git push`-ed to its own repo to be shared with other projects.
+If commits are added on top of that separate commit history,
+`git-subhistory merge` can merge those changes back into Main's commit
+history by inverting `split`, creating separate commits that make the
+same changes but inside `path/to/sub/`, which can then be merged in.
 
-Well, you know how you can `git log path/to/sub/` to see the history
-of just stuff in `path/to/sub/`? `git-subhistory split` (and
-`git-subtree split`) is like that but creates a whole new commit history
-of just that stuff, rooted inside `path/to/sub/`. This new commit
-history of just "Sub" can be `git push`-ed to its own repo and developed
-independently, or included in other projects.
-
-Say that happens and commits are made on top of that new commit history.
-Then `git-subhistory merge` merges those changes back into "Main's"
-commit history by inverting `split`, creating new commits making those
-same changes on top of the original "Main" commits, then merging them.
-(Contrast `git-subtree merge`, which merges the changes correctly, but
-messes up the commit graph with duplicate commits.)
+(`git-subtree split` is almost the same as `git-subhistory split`.
+`git-subtree merge` contrasts with `git-subhistory merge` in that while
+it also merges the changes correctly, it messes up the commit graph with
+duplicate commits and breaks Git's algorithms to find appropriate merge
+bases and determine fast-forwardness. See also "Comparison with
+`git-subtree`".)
 
 ### Example
 
