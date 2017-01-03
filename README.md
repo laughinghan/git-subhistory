@@ -47,17 +47,10 @@ Let's say we have history like so:
     |                          |    |                          |    |                          |    |                          |
     |__________________________|    |__________________________|    |__________________________|    |__________________________|
 
-We can split out the commit history of just Sub in `path/to/sub/`:
-
-    $ ../git-subhistory.sh split path/to/sub/ -b subproj
-    Rewrite 6285d3c68b3eb5f0cd2cb8c376c0d83a0f2b7c0a (2/2)
-    Ref 'refs/heads/subproj' was rewritten
-
-    Split out history of path/to/sub/ to subproj (also SPLIT_HEAD)
-
-We now have 2 disconnected histories, the untouched `master` branch, and
-a new `subproj` branch, with the history of just the stuff inside
-`path/to/sub/`:
+We can split out the commit history of just Sub in `path/to/sub/` by
+doing `git-subhistory split path/to/sub/ -b subproj`, which also creates
+a new branch `subproj` to point to it. This results in 2 disconnected
+histories, untouched `master` and sparkly new `subproj`:
 
                                                                                                     [HEAD]
     [initial commit]                                                                                [master]
@@ -106,25 +99,8 @@ Now we've `git pull`-ed in upstream bugfixes:
     |__________________________|    |__________________________|    |__________________________|    |__________________________|
 
 Here's where the magic happens: we can easily merge these changes into
-Main **using the `Add another Sub thing` commit as the merge base**:
-
-    $ ../git-subhistory.sh merge path/to/sub/ subproj
-    Rewrite 6285d3c68b3eb5f0cd2cb8c376c0d83a0f2b7c0a (2/2)
-    Ref 'SPLIT_HEAD' was rewritten
-
-    Split out history of path/to/sub/ to SPLIT_HEAD
-
-    Rewrite d535a7c1c90b42d66eb0938172538aa5fc878460 (2/2)
-    Ref 'ASSIMILATE_HEAD' was rewritten
-
-    Merge made by the 'recursive' strategy.
-     path/to/sub/fix-Sub-further | 1 +
-     path/to/sub/fix-Sub-somehow | 1 +
-     2 files changed, 2 insertions(+)
-     create mode 100644 path/to/sub/fix-Sub-further
-     create mode 100644 path/to/sub/fix-Sub-somehow
-
-Now the history of `master` looks like:
+Main **using the `Add another Sub thing` commit as the merge base** by
+doing `git-subhistory merge path/to/sub/ subproj`, resulting in:
 
                                                                                                                                                                                                       [HEAD]
     [initial commit]                                                                                                                                                                                  [master]
