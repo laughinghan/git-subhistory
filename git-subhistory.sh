@@ -16,10 +16,11 @@ test $# = 0 && set -- -h
 
 OPTS_SPEC="\
 git-subhistory split <subproj-path> (-b | -B) <subproj-branch>
-git-subhistory merge <subproj-path> <subproj-branch>
+git-subhistory merge <subproj-path> (-a) <subproj-branch>
 --
 q,quiet         be quiet
 v,verbose       be verbose
+a,auto          use auto-generated commit message without prompting user
 h               show the help
 
  options for 'split':
@@ -33,6 +34,7 @@ quiet="$GIT_QUIET"
 verbose=
 newbranch=
 force_newbranch=
+auto=
 
 while test $# != 0
 do
@@ -41,6 +43,8 @@ do
 	--no-quiet) quiet= ;;
 	-v|--verbose) verbose=1 ;;
 	--no-verbose) verbose= ;;
+        -a|--auto) auto=1 ;;
+        --no-auto) auto= ;;
 	-b|-B)
 		test "$1" = "-B" && force_newbranch=-f
 		shift
@@ -278,10 +282,11 @@ subhistory_assimilate () {
 }
 
 subhistory_merge () {
+	edit_option=$(test $auto || echo "--edit")
 	mkdir -p "./$GIT_PREFIX/$1" &&
 	subhistory_assimilate "$@" &&
 	say &&
-	git merge ASSIMILATE_HEAD --edit -m "$(
+	git merge ASSIMILATE_HEAD $edit_option -m "$(
 		echo "$(merge_name "$2" | git fmt-merge-msg \
 			| sed 's/^Merge /Merge subhistory /') under $path_to_sub"
 	)" \
@@ -351,7 +356,7 @@ cd ./$(git rev-parse --show-cdup) || exit $?
 GIT_DIR="$(git rev-parse --git-dir)"
 
 # a temporary directory for e.g. filter-branch backups
-mkdir "$GIT_DIR/subhistory-tmp/" || exit $?
+mkdir -p "$GIT_DIR/subhistory-tmp/" || exit $?
 trap "rm -rf '$GIT_DIR/subhistory-tmp/'" EXIT
 
 "subhistory_$subcommand" "$@"
