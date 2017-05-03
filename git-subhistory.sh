@@ -282,7 +282,7 @@ subhistory_merge () {
 	subhistory_assimilate "$@" &&
 	say &&
 	git merge ASSIMILATE_HEAD --edit -m "$(
-		echo "$(merge_name "$merge_from" | git fmt-merge-msg \
+		echo "$(merge_name "$2" | git fmt-merge-msg \
 			| sed 's/^Merge /Merge subhistory /') under $path_to_sub"
 	)" \
 	2>&1 | say_stdin
