@@ -1,3 +1,6 @@
 test:
+  pre:
+    - git config --global user.email "test@git-subhistory.sh"
+    - git config --global user.name "git-subhistory tester"
   override:
     - ./test.sh
