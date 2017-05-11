@@ -1,5 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 # http://github.com/laughinghan/git-subhistory
+
+# Request bash to report that a pipeline failed if any of the commands
+# in the pipe failed (not just the last one).  This is necessary for
+# proper error handling.
+set -o pipefail
 
 # util fn (at the top 'cos used in options parsing)
 die () {
@@ -16,10 +21,11 @@ test $# = 0 && set -- -h
 
 OPTS_SPEC="\
 git-subhistory split <subproj-path> (-b | -B) <subproj-branch>
-git-subhistory merge <subproj-path> <subproj-branch>
+git-subhistory merge <subproj-path> (-a) <subproj-branch>
 --
 q,quiet         be quiet
 v,verbose       be verbose
+a,auto          use auto-generated commit message without prompting user
 h               show the help
 
  options for 'split':
@@ -33,6 +39,7 @@ quiet="$GIT_QUIET"
 verbose=
 newbranch=
 force_newbranch=
+auto=
 
 while test $# != 0
 do
@@ -41,6 +48,8 @@ do
 	--no-quiet) quiet= ;;
 	-v|--verbose) verbose=1 ;;
 	--no-verbose) verbose= ;;
+        -a|--auto) auto=1 ;;
+        --no-auto) auto= ;;
 	-b|-B)
 		test "$1" = "-B" && force_newbranch=-f
 		shift
@@ -233,23 +242,24 @@ subhistory_assimilate () {
 					git read-tree $(
 						cat "$GIT_DIR/subhistory-tmp/split-to-orig-map/$parent" 2>/dev/null \
 						|| map $parent) &&
-					git rm --cached -r '"'$path_to_sub'"' -q &&
+					git rm --cached -r --ignore-unmatch '"'$path_to_sub'"' -q &&
 					if test -z $parent_Main_tree
 					then
 						parent_Main_tree=$(git write-tree)
 					elif test $(git write-tree) != $parent_Main_tree
 					then
 						git read-tree '$default_Main_tree' && # TODO: find earliest merged tree
-						git rm --cached -r '"'$path_to_sub'"' -q &&
+						git rm --cached -r --ignore-unmatch '"'$path_to_sub'"' -q &&
 						break
 					fi
 				done
-			else
+			elif git rev-parse --verify -q $GIT_COMMIT^ >/dev/null # if this rev has a parent (IE is not a root/initial commit)
+                        then
 				parent=$(git rev-parse $GIT_COMMIT^) &&
 				git read-tree $(
 					cat "$GIT_DIR/subhistory-tmp/split-to-orig-map/$parent" 2>/dev/null \
 					|| map $parent)
-				git rm --cached -r '"'$path_to_sub'"' -q
+				git rm --cached -r --ignore-unmatch '"'$path_to_sub'"' -q
 			fi &&
 			git read-tree --prefix='"'$path_to_sub'"' $GIT_COMMIT'
 
@@ -263,26 +273,36 @@ subhistory_assimilate () {
 		revs_to_rewrite=ASSIMILATE_HEAD
 	fi
 
-	git filter-branch \
+        commit_count=$(git rev-list --count $revs_to_rewrite)
+
+        if test $commit_count -ne 0
+        then
+	    git filter-branch \
 		--original subhistory-tmp/filter-branch-backup \
 		--parent-filter "$parent_filter" \
 		--index-filter "$index_filter"  \
 		-- $revs_to_rewrite \
-	2>&1 | say_stdin || exit $?
+	        2>&1 | say_stdin || exit $?
 
-	say
-	say "Assimilated $assimilatee into $(
-		git symbolic-ref --short HEAD -q \
-		|| echo "detached HEAD ($(git rev-parse --short HEAD))"
-	) under $path_to_sub as ASSIMILATE_HEAD"
+	    say
+	    say "Assimilated $assimilatee into $(
+		    git symbolic-ref --short HEAD -q \
+		    || echo "detached HEAD ($(git rev-parse --short HEAD))"
+	    ) under $path_to_sub as ASSIMILATE_HEAD"
+        else
+            say
+            say "Already completely assimilated - nothing to do"
+	    git update-ref ASSIMILATE_HEAD HEAD || exit $?
+        fi
 }
 
 subhistory_merge () {
+	edit_option=$(test $auto || echo "--edit")
 	mkdir -p "./$GIT_PREFIX/$1" &&
 	subhistory_assimilate "$@" &&
 	say &&
-	git merge ASSIMILATE_HEAD --edit -m "$(
-		echo "$(merge_name "$merge_from" | git fmt-merge-msg \
+	git merge ASSIMILATE_HEAD $edit_option -m "$(
+		echo "$(merge_name "$2" | git fmt-merge-msg \
 			| sed 's/^Merge /Merge subhistory /') under $path_to_sub"
 	)" \
 	2>&1 | say_stdin
@@ -351,7 +371,7 @@ cd ./$(git rev-parse --show-cdup) || exit $?
 GIT_DIR="$(git rev-parse --git-dir)"
 
 # a temporary directory for e.g. filter-branch backups
-mkdir "$GIT_DIR/subhistory-tmp/" || exit $?
+mkdir -p "$GIT_DIR/subhistory-tmp/" || exit $?
 trap "rm -rf '$GIT_DIR/subhistory-tmp/'" EXIT
 
 "subhistory_$subcommand" "$@"

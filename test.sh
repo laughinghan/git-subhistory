@@ -44,7 +44,7 @@ assert_is_subcommit_of () {
 rest_of_tree () (
 	export GIT_INDEX_FILE=.git/index.tmp
 	git read-tree $1
-	git rm --cached -r $(test $2 && echo $2 || echo path/to/sub/) -q &>/dev/null
+	git rm --cached -r $(test $2 && echo $2 || echo path/to/sub/) -q >/dev/null 2>&1
 	git write-tree
 	rm .git/index.tmp
 )
