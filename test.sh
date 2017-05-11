@@ -134,7 +134,7 @@ mkdir -p path/to/new-sub/
 assert_is_subcommit_of new-subproj ASSIMILATE_HEAD path/to/new-sub/
 assert_is_subcommit_of new-subproj^ ASSIMILATE_HEAD^ path/to/new-sub/
 
-git merge ASSIMILATE_HEAD -m "Merge subhistory branch 'new-subproj' under path/to/new-sub/" $QUIET
+git merge --allow-unrelated-histories ASSIMILATE_HEAD -m "Merge subhistory branch 'new-subproj' under path/to/new-sub/" $QUIET
 assert "successful merge" $? = 0
 assert "rest of merged tree is the same as before" \
 	$(rest_of_tree master path/to/new-sub/) = $(rest_of_tree master^ path/to/new-sub/)
